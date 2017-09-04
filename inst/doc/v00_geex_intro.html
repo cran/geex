@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="B. Saul" />
+
+<meta name="date" content="2017-09-04" />
+
+<title>An introduction to M-estimation with geex</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">An introduction to M-estimation with <code>geex</code></h1>
+<h4 class="author"><em>B. Saul</em></h4>
+<h4 class="date"><em>2017-09-04</em></h4>
+
+
+
+<div id="from-m-estimation-math-to-code" class="section level2">
+<h2>From M-estimation math to code</h2>
+<p>In the basic set-up, M-estimation applies to estimators of the <span class="math inline">\(p \times 1\)</span> parameter <span class="math inline">\(\theta=(\theta_1, \theta_2, \dots, \theta_p)^{\intercal}\)</span> which can be obtained as solutions to an equation of the form</p>
+<span class="math display">\[\begin{equation}
+\label{eq:psi}
+\sum_{i = 1}^m \psi(O_i, \theta) = 0,
+\end{equation}\]</span>
+<p>where <span class="math inline">\(O_1, \ldots, O_m\)</span> are <span class="math inline">\(m\)</span> independent and identically distributed (iid) random variables, and the function <span class="math inline">\(\psi\)</span> returns a vector of length <span class="math inline">\(p\)</span> and does not depend on <span class="math inline">\(i\)</span> or <span class="math inline">\(m\)</span> <span class="citation">(Stefanski and Boos 2002, hereafter SB)</span>. See SB for the case where the <span class="math inline">\(O_i\)</span> are independent but not necessarily identically distributed. The roots of (1) are referred to as M-estimators and denoted by <span class="math inline">\(\hat \theta\)</span>. M-estimators can be solved for analytically in some cases or computed numerically in general. Under certain regularity conditions, the asymptotic properties of <span class="math inline">\(\hat{\theta}\)</span> can be derived from Taylor series approximations, the law of large numbers, and the central limit theorem. In brief, let <span class="math inline">\(\theta_0\)</span> be the true parameter value defined by <span class="math inline">\(\int \psi(o, \theta_0) dF(o) = 0\)</span>, where <span class="math inline">\(F\)</span> is the distribution function of <span class="math inline">\(O\)</span>. Let <span class="math inline">\(\dot{\psi}(o, \theta) = {\partial \psi(O_i, \theta)/\partial \theta}^{\intercal}\)</span>, <span class="math inline">\(A(\theta_0) = E[-\dot{\psi}(O_1, \theta_0)]\)</span>, and <span class="math inline">\(B(\theta_0) = E[\psi(O_1, \theta_0)\psi(O_1, \theta_0)^{\intercal}]\)</span>. Then under suitable regularity assumptions, <span class="math inline">\(\hat{\theta}\)</span> is consistent and asymptotically Normal, i.e.,</p>
+<span class="math display">\[\begin{equation*}
+\label{eq:variance}
+\sqrt{m}(\hat{\theta} - \theta_0) \overset{d}{\to} N(0, V(\theta_0))  \text{ as } m \to \infty,
+\end{equation*}\]</span>
+<p>where <span class="math inline">\(V(\theta_0) = A(\theta_0)^{-1} B(\theta_0) \{A(\theta_0)^{-1} \}^{\intercal}\)</span>. The sandwich form of <span class="math inline">\(V(\theta_0)\)</span> suggests several possible large sample variance estimators. For some problems, the analytic form of <span class="math inline">\(V(\theta_0)\)</span> can be derived and estimators of <span class="math inline">\(\theta_0\)</span> and other unknowns simply plugged into <span class="math inline">\(V(\theta_0)\)</span>. Alternatively, <span class="math inline">\(V(\theta_0)\)</span> can be consistently estimated by the empirical sandwich variance estimator, where the expectations in <span class="math inline">\(A(\theta)\)</span> and <span class="math inline">\(B(\theta)\)</span> are replaced with their empirical counterparts. Let <span class="math inline">\(A_i = - \dot{\psi}(O_i, \theta)|_{\theta = \hat{\theta}}\)</span>, <span class="math inline">\(A_m = m^{-1} \sum_{i = 1}^m A_i\)</span>, <span class="math inline">\(B_i = \psi(O_i, \hat{\theta}) \psi(O_i, \hat{\theta})^{\intercal}\)</span>, and <span class="math inline">\(B_m = m^{-1} \sum_{i = 1}^m B_i\)</span>. The empirical sandwich estimator of the variance of <span class="math inline">\(\hat{\theta}\)</span> is:</p>
+<span class="math display">\[\begin{equation}
+\label{eq:esve}
+\hat{\Sigma} = A_m^{-1} B_m \{A_m^{-1}\}^{\intercal}/m .
+\end{equation}\]</span>
+<p>The <code>geex</code> package provides an application programming interface (API) for carrying out M-estimation. The analyst provides a function, called <code>estFUN</code>, corresponding to <span class="math inline">\(\psi(O_i, \theta)\)</span> that maps data <span class="math inline">\(O_i\)</span> to a function of <span class="math inline">\(\theta\)</span>. Numerical derivatives approximate <span class="math inline">\(\dot{\psi}\)</span> so that evaluating <span class="math inline">\(\hat{\Sigma}\)</span> is entirely a computational exercise. No analytic derivations are required from the analyst.</p>
+<p>Consider estimating the population mean <span class="math inline">\(\theta = E[Y_i]\)</span> using the sample mean <span class="math inline">\(\hat{\theta} = m^{-1} \sum_{i=1}^m Y_i\)</span> of <span class="math inline">\(m\)</span> iid random variables <span class="math inline">\(Y_1, \dots, Y_m\)</span>. The estimator <span class="math inline">\(\hat{\theta}\)</span> can be expressed as the solution to the following estimating equation:</p>
+<p><span class="math display">\[
+\sum_{i = 1}^m (Y_i - \theta) = 0.
+\]</span></p>
+<p>which is equivalent to solving  where <span class="math inline">\(O_i = Y_i\)</span> and <span class="math inline">\(\psi(O_i, \theta) = Y_i - \theta\)</span>. An <code>estFUN</code> is a translation of <span class="math inline">\(\psi\)</span> into a function whose first argument is <code>data</code> and returns a function whose first argument is <code>theta</code>. An <code>estFUN</code> corresponding to the estimating equation for the sample mean of <span class="math inline">\(Y\)</span> is:</p>
+<pre><code>meanFUN &lt;- function(data){ function(theta){ data$Y - theta } } .</code></pre>
+<p>If an estimator fits into the above framework, then the user need only specify <code>estFUN</code>. No other programming is required to obtain point and variance estimates. The remaining sections provide examples of translating <span class="math inline">\(\psi\)</span> into an <code>estFUN</code>.</p>
+</div>
+<div id="calculus-of-m-estimation-examples" class="section level2">
+<h2>Calculus of M-estimation Examples</h2>
+<p>The three examples of M-estimation from SB are presented here for demonstration. For these examples, the data are <span class="math inline">\(O_i = \{Y_{1i}, Y_{2i}\}\)</span> where <span class="math inline">\(Y_1 \sim N(5, 16)\)</span> and <span class="math inline">\(Y_2 \sim N(2, 1)\)</span> for <span class="math inline">\(m = 100\)</span> and are included in the <code>geexex</code> dataset.</p>
+<div id="example-1-sample-moments" class="section level3">
+<h3>Example 1: Sample moments</h3>
+<p>The first example estimates the population mean (<span class="math inline">\(\theta_1\)</span>) and variance (<span class="math inline">\(\theta_2\)</span>) of <span class="math inline">\(Y_1\)</span>. The solution to the estimating equations below are the sample mean <span class="math inline">\(\hat{\theta}_1 = m^{-1} \sum_{i = 1}^m Y_{1i}\)</span> and sample variance <span class="math inline">\(\hat{\theta}_2 = m^{-1} \sum_{i = 1}^m (Y_{1i} - \hat{\theta}_1)^2\)</span>.</p>
+<p><span class="math display">\[
+\psi(Y_{1i}, \theta) = 
+ \begin{pmatrix}
+  Y_{1i} - \theta_1 \\
+  (Y_{1i} - \theta_1)^2 - \theta_2
+ \end{pmatrix}
+\]</span></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SB1_estfun &lt;-<span class="st"> </span>function(data){
+  Y1 &lt;-<span class="st"> </span>data$Y1
+  function(theta){
+      <span class="kw">c</span>(Y1 -<span class="st"> </span>theta[<span class="dv">1</span>],
+       (Y1 -<span class="st"> </span>theta[<span class="dv">1</span>])^<span class="dv">2</span> -<span class="st"> </span>theta[<span class="dv">2</span>])
+  }
+}</code></pre></div>
+<p>The primary <code>geex</code> function is <code>m_estimate</code>, which requires two inputs: <code>estFUN</code> (the <span class="math inline">\(\psi\)</span> function), <code>data</code> (the data frame containing <span class="math inline">\(O_i\)</span> for <span class="math inline">\(i = 1, \dots, m\)</span>). The package defaults to <code>rootSolve::multiroot</code> or estimating roots of , though the solver algorithm can be specified in the <code>root_control</code> argument. Starting values for <code>rootSolve::multiroot</code> are passed via the <code>root_control</code> argument; e.g.,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(geex)
+results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(
+    <span class="dt">estFUN =</span> SB1_estfun, 
+    <span class="dt">data   =</span> geexex,
+    <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">n &lt;-<span class="st"> </span><span class="kw">nrow</span>(geexex)
+A &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> <span class="dv">2</span>)
+
+B &lt;-<span class="st"> </span><span class="kw">with</span>(geexex, {
+  Ybar &lt;-<span class="st"> </span><span class="kw">mean</span>(Y1)
+  B11 &lt;-<span class="st"> </span><span class="kw">mean</span>( (Y1 -<span class="st"> </span>Ybar)^<span class="dv">2</span> )
+  B12 &lt;-<span class="st"> </span><span class="kw">mean</span>( (Y1 -<span class="st"> </span>Ybar) *<span class="st"> </span>((Y1 -<span class="st"> </span>Ybar)^<span class="dv">2</span> -<span class="st"> </span>B11) )
+  B22 &lt;-<span class="st"> </span><span class="kw">mean</span>( ((Y1 -<span class="st"> </span>Ybar)^<span class="dv">2</span> -<span class="st"> </span>B11)^<span class="dv">2</span> )
+  <span class="kw">matrix</span>(
+    <span class="kw">c</span>(B11, B12,
+      B12, B22), <span class="dt">nrow =</span> <span class="dv">2</span>
+  )
+})
+
+<span class="co"># closed form roots</span>
+theta_cls &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">mean</span>(geexex$Y1),
+               <span class="co"># since var() divides by n - 1, not n</span>
+               <span class="kw">var</span>(geexex$Y1) *<span class="st"> </span>(n -<span class="st"> </span><span class="dv">1</span>)/<span class="st"> </span>n ) 
+
+<span class="co"># closed form sigma</span>
+Sigma_cls &lt;-<span class="st"> </span>(<span class="kw">solve</span>(A) %*%<span class="st"> </span>B %*%<span class="st"> </span><span class="kw">t</span>(<span class="kw">solve</span>(A))) /<span class="st"> </span>n
+
+comparison &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> <span class="kw">coef</span>(results), <span class="dt">vcov =</span> <span class="kw">vcov</span>(results)), 
+                   <span class="dt">cls  =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</code></pre></div>
+<p>The <code>m_estimate</code> function returns an object of the <code>S4</code> class <code>geex</code>, which contains an <code>estimates</code> slot and <code>vcov</code> slot for <span class="math inline">\(\hat{\theta}\)</span> and <span class="math inline">\(\hat{\Sigma}\)</span>, respectively. These slots can be accessed by the functions <code>coef</code> (or <code>roots</code>) and <code>vcov</code>. The point estimates obtained for <span class="math inline">\(\theta_1\)</span> and <span class="math inline">\(\theta_2\)</span> are analogous to the base R functions <code>mean</code> and <code>var</code> (after multiplying by <span class="math inline">\(m-1/m\)</span> for the latter). SB gave a closed form for <span class="math inline">\(A(\theta_0)\)</span> (an identity matrix) and <span class="math inline">\(B(\theta_0)\)</span> (not shown here) and suggest plugging in sample moments to compute <span class="math inline">\(B(\hat{\theta})\)</span>. The point and variance estimates using both <code>geex</code> and the analytic solutions are shown below}. The maximum absolute difference between either the point or variance estimates is 4e-11, thus demonstrating excellent agreement between the numerical results obtained from <code>geex</code> and the closed form solutions for this set of estimating equations and data.</p>
+<pre><code>## $geex
+## $geex$estimates
+## [1]  5.044563 10.041239
+## 
+## $geex$vcov
+##            [,1]       [,2]
+## [1,] 0.10041239 0.03667969
+## [2,] 0.03667969 2.49219638
+## 
+## 
+## $cls
+## $cls$estimates
+## [1]  5.044563 10.041239
+## 
+## $cls$vcov
+##            [,1]       [,2]
+## [1,] 0.10041239 0.03667969
+## [2,] 0.03667969 2.49219638</code></pre>
+</div>
+<div id="example-2-ratio-estimator" class="section level3">
+<h3>Example 2: Ratio estimator</h3>
+<p>This example calculates a ratio estimator and illustrates the delta method via M-estimation. The estimating equations target the means of <span class="math inline">\(Y_1\)</span> and <span class="math inline">\(Y_2\)</span>, labelled <span class="math inline">\(\theta_1\)</span> and <span class="math inline">\(\theta_2\)</span>, as well as the estimand <span class="math inline">\(\theta_3 = \theta_1/ \theta_2\)</span>.</p>
+<p><span class="math display">\[
+\psi(Y_{1i}, Y_{2i}, \theta) = 
+\begin{pmatrix}
+Y_{1i} - \theta_1 \\
+Y_{2i} - \theta_2 \\
+\theta_1 - \theta_3\theta_2
+\end{pmatrix}
+\]</span></p>
+<p>The solution to  for this <span class="math inline">\(\psi\)</span> function yields <span class="math inline">\(\hat{\theta}_3 = \bar{Y}_1 / \bar{Y}_2\)</span>, where <span class="math inline">\(\bar{Y}_j\)</span> denotes the sample mean of <span class="math inline">\(Y_{j1}, \ldots,Y_{jm}\)</span> for <span class="math inline">\(j=1,2\)</span>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SB2_estfun &lt;-<span class="st"> </span>function(data){
+  Y1 &lt;-<span class="st"> </span>data$Y1; Y2 &lt;-<span class="st"> </span>data$Y2
+  function(theta){
+      <span class="kw">c</span>(Y1 -<span class="st"> </span>theta[<span class="dv">1</span>],
+        Y2 -<span class="st"> </span>theta[<span class="dv">2</span>],
+        theta[<span class="dv">1</span>] -<span class="st"> </span>(theta[<span class="dv">3</span>] *<span class="st"> </span>theta[<span class="dv">2</span>]) 
+    )
+  }
+}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(
+    <span class="dt">estFUN =</span> SB2_estfun, 
+    <span class="dt">data  =</span> geexex, 
+    <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Comparison to an analytically derived sanwich estimator</span>
+A &lt;-<span class="st"> </span><span class="kw">with</span>(geexex, {
+ <span class="kw">matrix</span>(
+  <span class="kw">c</span>(<span class="dv">1</span> , <span class="dv">0</span>, <span class="dv">0</span>,
+    <span class="dv">0</span> , <span class="dv">1</span>, <span class="dv">0</span>,
+    -<span class="dv">1</span>, <span class="kw">mean</span>(Y1)/<span class="kw">mean</span>(Y2), <span class="kw">mean</span>(Y2)),
+  <span class="dt">byrow =</span> <span class="ot">TRUE</span>, <span class="dt">nrow =</span> <span class="dv">3</span>)
+})
+
+B &lt;-<span class="st"> </span><span class="kw">with</span>(geexex, {
+  <span class="kw">matrix</span>(
+    <span class="kw">c</span>(<span class="kw">var</span>(Y1)   , <span class="kw">cov</span>(Y1, Y2), <span class="dv">0</span>,
+      <span class="kw">cov</span>(Y1, Y2), <span class="kw">var</span>(Y2)   , <span class="dv">0</span>,
+      <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>),
+    <span class="dt">byrow =</span> <span class="ot">TRUE</span>, <span class="dt">nrow =</span> <span class="dv">3</span>)
+})
+
+## closed form roots
+theta_cls &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">mean</span>(geexex$Y1), <span class="kw">mean</span>(geexex$Y2))
+theta_cls[<span class="dv">3</span>] &lt;-<span class="st"> </span>theta_cls[<span class="dv">1</span>]/theta_cls[<span class="dv">2</span>]
+## closed form covariance
+Sigma_cls &lt;-<span class="st"> </span>(<span class="kw">solve</span>(A) %*%<span class="st"> </span>B %*%<span class="st"> </span><span class="kw">t</span>(<span class="kw">solve</span>(A))) /<span class="st"> </span><span class="kw">nrow</span>(geexex)
+comparison &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> <span class="kw">coef</span>(results), <span class="dt">vcov =</span> <span class="kw">vcov</span>(results)), 
+                   <span class="dt">cls  =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</code></pre></div>
+<p>SB gave closed form expressions for <span class="math inline">\(A(\theta_0)\)</span> and <span class="math inline">\(B(\theta_0)\)</span>, into which we plug in appropriate estimates for the matrix components and compare to the results from <code>geex</code>. The point estimates again show excellent agreement (maximum absolute difference 4.4e-16), while the covariance estimates differ by the third decimal (maximum absolute difference 1e-03).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">comparison</code></pre></div>
+<pre><code>## $geex
+## $geex$estimates
+## [1] 5.044563 2.012793 2.506250
+## 
+## $geex$vcov
+##              [,1]         [,2]        [,3]
+## [1,]  0.100412389 -0.008718712  0.06074328
+## [2,] -0.008718712  0.010693092 -0.01764626
+## [3,]  0.060743283 -0.017646263  0.05215103
+## 
+## 
+## $cls
+## $cls$estimates
+## [1] 5.044563 2.012793 2.506250
+## 
+## $cls$vcov
+##             [,1]        [,2]        [,3]
+## [1,]  0.10142666 -0.00880678  0.06135685
+## [2,] -0.00880678  0.01080110 -0.01782451
+## [3,]  0.06135685 -0.01782451  0.05267781</code></pre>
+</div>
+<div id="example-3-delta-method-continued" class="section level3">
+<h3>Example 3: Delta method continued</h3>
+<p>This example extends Example 1 to again illustrate the delta method. The estimating equations target not only the mean (<span class="math inline">\(\theta_1\)</span>) and variance (<span class="math inline">\(\theta_2\)</span>) of <span class="math inline">\(Y_1\)</span>, but also the standard deviation (<span class="math inline">\(\theta_3\)</span>) and the log of the variance (<span class="math inline">\(\theta_4\)</span>) of <span class="math inline">\(Y_1\)</span>.</p>
+<p><span class="math display">\[
+\psi(Y_{1i}, \mathbf{\theta}) = 
+\begin{pmatrix}
+Y_{1i} - \theta_1 \\
+(Y_{1i} - \theta_1)^2 - \theta_2 \\
+\sqrt{\theta_2} - \theta_3 \\
+\log(\theta_2) - \theta_4
+\end{pmatrix}
+\]</span></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SB3_estfun &lt;-<span class="st"> </span>function(data){
+  Y1 &lt;-<span class="st"> </span>data$Y1
+  function(theta){
+      <span class="kw">c</span>(Y1 -<span class="st"> </span>theta[<span class="dv">1</span>],
+       (Y1 -<span class="st"> </span>theta[<span class="dv">1</span>])^<span class="dv">2</span> -<span class="st"> </span>theta[<span class="dv">2</span>],
+       <span class="kw">sqrt</span>(theta[<span class="dv">2</span>]) -<span class="st"> </span>theta[<span class="dv">3</span>],
+       <span class="kw">log</span>(theta[<span class="dv">2</span>]) -<span class="st"> </span>theta[<span class="dv">4</span>])
+  }
+}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## closed form roots
+theta_cls &lt;-<span class="st"> </span><span class="kw">numeric</span>(<span class="dv">4</span>)
+theta_cls[<span class="dv">1</span>] &lt;-<span class="st"> </span><span class="kw">mean</span>(geexex$Y1)
+theta_cls[<span class="dv">2</span>] &lt;-<span class="st"> </span><span class="kw">sum</span>((geexex$Y1 -<span class="st"> </span>theta_cls[<span class="dv">1</span>])^<span class="dv">2</span>)/<span class="kw">nrow</span>(geexex)
+theta_cls[<span class="dv">3</span>] &lt;-<span class="st"> </span><span class="kw">sqrt</span>(theta_cls[<span class="dv">2</span>])
+theta_cls[<span class="dv">4</span>] &lt;-<span class="st"> </span><span class="kw">log</span>(theta_cls[<span class="dv">2</span>])
+
+## Compare to closed form ##
+theta2 &lt;-<span class="st"> </span>theta_cls[<span class="dv">2</span>]
+mu3 &lt;-<span class="st"> </span>moments::<span class="kw">moment</span>(geexex$Y1, <span class="dt">order =</span> <span class="dv">3</span>, <span class="dt">central =</span> <span class="ot">TRUE</span>)
+mu4 &lt;-<span class="st"> </span>moments::<span class="kw">moment</span>(geexex$Y1, <span class="dt">order =</span> <span class="dv">4</span>, <span class="dt">central =</span> <span class="ot">TRUE</span>)
+## closed form covariance
+Sigma_cls &lt;-<span class="st"> </span><span class="kw">matrix</span>(
+  <span class="kw">c</span>(theta2, mu3, mu3/(<span class="dv">2</span>*<span class="kw">sqrt</span>(theta2)), mu3/theta2,
+    mu3, mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>, (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/(<span class="dv">2</span>*<span class="kw">sqrt</span>(theta2)), (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/theta2,
+    mu3/(<span class="dv">2</span> *<span class="st"> </span><span class="kw">sqrt</span>(theta2)), (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/(<span class="dv">2</span>*<span class="kw">sqrt</span>(theta2)), (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/(<span class="dv">4</span>*theta2), (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/(<span class="dv">2</span>*theta2^(<span class="dv">3</span>/<span class="dv">2</span>)),
+    mu3/theta2, (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/theta2, (mu4 -<span class="st"> </span>theta2^<span class="dv">2</span>)/(<span class="dv">2</span>*theta2^(<span class="dv">3</span>/<span class="dv">2</span>)), (mu4/theta2^<span class="dv">2</span>) -<span class="st"> </span><span class="dv">1</span>) ,
+  <span class="dt">nrow =</span> <span class="dv">4</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>) /<span class="st"> </span><span class="kw">nrow</span>(geexex)
+## closed form covariance
+<span class="co"># Sigma_cls &lt;- (solve(A) %*% B %*% t(solve(A))) / n</span>
+comparison &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> <span class="kw">coef</span>(results), <span class="dt">vcov =</span> <span class="kw">vcov</span>(results)), 
+                   <span class="dt">cls  =</span> <span class="kw">list</span>(<span class="dt">estimates =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</code></pre></div>
+<p>SB again provided a closed form for <span class="math inline">\(A(\theta_0)\)</span> and <span class="math inline">\(B(\theta_0)\)</span>, which we compare to the <code>geex</code> results. The maximum absolute difference between <code>geex</code> and the closed form estimates for both the parameters and the covariance is 3.8e-11.</p>
+<pre><code>## $geex
+## $geex$estimates
+## [1]  5.044563 10.041239  3.168791  2.306700
+## 
+## $geex$vcov
+##             [,1]       [,2]        [,3]        [,4]
+## [1,] 0.100412389 0.03667969 0.005787646 0.003652905
+## [2,] 0.036679687 2.49219638 0.393240840 0.248196105
+## [3,] 0.005787646 0.39324084 0.062049026 0.039162582
+## [4,] 0.003652905 0.24819611 0.039162582 0.024717678
+## 
+## 
+## $cls
+## $cls$estimates
+## [1]  5.044563 10.041239  3.168791  2.306700
+## 
+## $cls$vcov
+##             [,1]       [,2]        [,3]        [,4]
+## [1,] 0.100412389 0.03667969 0.005787646 0.003652905
+## [2,] 0.036679687 2.49219638 0.393240840 0.248196105
+## [3,] 0.005787646 0.39324084 0.062049026 0.039162582
+## [4,] 0.003652905 0.24819611 0.039162582 0.024717678</code></pre>
+</div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-stefanski2002">
+<p>Stefanski, Len A., and Dennis D. Boos. 2002. <em>The Calculus of M-Estimation</em> 56. doi:<a href="https://doi.org/10.1198/000313002753631330">10.1198/000313002753631330</a>.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

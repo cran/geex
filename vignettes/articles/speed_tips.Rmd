@@ -1,0 +1,64 @@
+---
+title: "Tips for making geex faster"
+output: html_document
+---
+
+*Under development*
+
+## Do everything not involving theta outside of the psiFUN
+
+The following example compares two `estFUN`s. The first performs manipulations of `data` outside of the "inner" `psiFUN` function. The second performs the manipulations within the returned `psiFUN`.
+```{r}
+
+glm_eefun1 <- function(data, model){
+  f <- grab_psiFUN(model, data)
+  function(theta){
+    f(theta)
+  }
+}
+
+glm_eefun2 <- function(data, model){
+  function(theta){
+    f <- grab_psiFUN(model, data)
+    f(theta)
+  }
+}
+```
+
+Now, compare the speed:
+
+```{r setup}
+library(geex)
+library(geepack, quietly = TRUE)
+data("ohio")
+
+test_binomial <- glm(resp ~ age, data = ohio,
+                     family = binomial(link = "logit"))
+
+system.time({test <- m_estimate(
+  glm_eefun1,
+  data = ohio,
+  units = 'id',
+  root_control  = setup_root_control(start = coef(test_binomial)),
+  outer_args = list(model = test_binomial))})
+
+system.time(update(test, estFUN = glm_eefun2))
+```
+
+## Use `method = "simple"` for computing numerical derivatives
+
+The default for the function `numDeriv::jacobian` uses the "Richardson" method for computing numerical derivatives, which requires multiple evaluations of each `psiFUN`. The "simple" method is much faster, though less accurate. See the `numDeriv::jacobian` help page for further options.
+
+```{r}
+# The default uses method = 'Richardson`
+system.time({test <- m_estimate(
+  estFUN = glm_eefun1, data = ohio, units = "id",
+  roots = coef(test_binomial),
+  compute_roots = FALSE,
+  outer_args = list(model = test_binomial))})
+
+# Using method = "simple"
+system.time(update(test, 
+          deriv_control = setup_deriv_control(method = "simple")))
+```
+
