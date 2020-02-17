@@ -1,7 +1,7 @@
 Package: geex
 Type: Package
 Title: An API for M-Estimation
-Version: 1.0.11
+Version: 1.0.12
 Authors@R: c(person("Bradley", "Saul", role = c("aut", "cre"),
                     email = "bradleysaul@gmail.com"),
              person("Brian", "Barkley", role = c("ctb")))
@@ -11,8 +11,10 @@ Maintainer: Bradley Saul <bradleysaul@gmail.com>
 Description: Provides a general, flexible framework for estimating parameters
     and empirical sandwich variance estimator from a set of unbiased estimating
     equations (i.e., M-estimation in the vein of Stefanski & Boos (2002)
-    <doi:10.1198/000313002753631330>). Also provides an API to compute finite-sample
-    variance corrections. 
+    <doi:10.1198/000313002753631330>). All examples from Stefanski & Boos (2002)
+    are published in the corresponding Journal of Statistical Software paper 
+    <doi:10.18637/jss.v092.i02>. Also provides an API to compute finite-sample 
+    variance corrections.
 Depends: R (>= 3.3)
 Imports: Matrix (>= 1.2-6), rootSolve (>= 1.6.6), numDeriv (>=
         2014.2-1), lme4 (>= 1.1-12), methods (>= 3.3)
@@ -24,8 +26,8 @@ BugReports: https://github.com/bsaul/geex/issues
 License: MIT + file LICENSE
 LazyData: TRUE
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.2
 NeedsCompilation: no
-Packaged: 2018-09-23 15:18:03 UTC; bsaul
+Packaged: 2020-02-17 14:11:18 UTC; bsaul
 Repository: CRAN
-Date/Publication: 2018-09-23 17:40:03 UTC
+Date/Publication: 2020-02-17 15:10:05 UTC

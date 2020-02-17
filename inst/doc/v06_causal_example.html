@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2018-09-23" />
+<meta name="date" content="2020-02-17" />
 
 <title>Estimating causal parameters using geex</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -50,9 +49,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -83,7 +82,29 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -271,6 +292,9 @@ code > span.al { color: #ff0000; font-weight: bold; }
 code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
+
+
+
 </head>
 
 <body>
@@ -279,126 +303,131 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 <h1 class="title toc-ignore">Estimating causal parameters using <code>geex</code></h1>
-<h4 class="author"><em>Bradley Saul</em></h4>
-<h4 class="date"><em>2018-09-23</em></h4>
+<h4 class="author">Bradley Saul</h4>
+<h4 class="date">2020-02-17</h4>
 
 
 
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(geex)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(inferference)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(dplyr)</a></code></pre></div>
-<div id="estimating-a-propensity-score-vs.treating-propensity-as-known" class="section level2">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(geex)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(inferference)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">library</span>(dplyr)</span></code></pre></div>
+<div id="estimating-a-propensity-score-vs.-treating-propensity-as-known" class="section level2">
 <h2>Estimating a propensity score vs. treating propensity as known</h2>
 <p>TODO: describe what’s going on here</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">n &lt;-<span class="st"> </span><span class="dv">1000</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">x &lt;-<span class="st"> </span><span class="kw">data_frame</span>(</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  <span class="dt">A  =</span> <span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">.2</span>),</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  <span class="dt">Y0 =</span> <span class="kw">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  <span class="dt">Y1 =</span> <span class="kw">rnorm</span>(n, <span class="dv">2</span> <span class="op">*</span><span class="st"> </span>A, <span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="dt">Y =</span> (A<span class="op">*</span>Y1) <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)<span class="op">*</span>Y0)</a></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">ipw_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  A &lt;-<span class="st"> </span>data<span class="op">$</span>A</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="cf">function</span>(theta, phat){</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">    ipw0 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>theta[<span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">    ipw1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>theta[<span class="dv">2</span>]</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">    </a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">    <span class="co"># Estimating functions #</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    <span class="kw">c</span>( (<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A) <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>],</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">      A <span class="op">-</span><span class="st"> </span>theta[<span class="dv">2</span>],</a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">      </a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">      <span class="co"># Estimating IP weight</span></a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">      Y<span class="op">*</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)<span class="op">*</span>ipw0 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">3</span>],</a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">      Y<span class="op">*</span>(A)<span class="op">*</span>ipw1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">4</span>],  </a>
-<a class="sourceLine" id="cb3-15" data-line-number="15">      </a>
-<a class="sourceLine" id="cb3-16" data-line-number="16">      <span class="co"># Treating IP weight as known</span></a>
-<a class="sourceLine" id="cb3-17" data-line-number="17">      Y<span class="op">*</span>A<span class="op">/</span>phat <span class="op">-</span><span class="st"> </span>theta[<span class="dv">5</span>]</a>
-<a class="sourceLine" id="cb3-18" data-line-number="18">      )</a>
-<a class="sourceLine" id="cb3-19" data-line-number="19">  }</a>
-<a class="sourceLine" id="cb3-20" data-line-number="20">}</a></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">phat &lt;-<span class="st"> </span><span class="kw">mean</span>(x<span class="op">$</span>A)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">out &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(ipw_estFUN,</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">           <span class="dt">data =</span> x,</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">           <span class="dt">inner_args =</span> <span class="kw">list</span>(<span class="dt">phat =</span> phat),</a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">           <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">5</span>, <span class="fl">.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)))</a></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">## Comparing point estimates</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">all.equal</span>(<span class="kw">mean</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat), <span class="kw">coef</span>(out)[<span class="dv">4</span>]) </a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>n &lt;-<span class="st"> </span><span class="dv">1000</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>x &lt;-<span class="st"> </span><span class="kw">data_frame</span>(</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="dt">A  =</span> <span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">.2</span>),</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  <span class="dt">Y0 =</span> <span class="kw">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="dt">Y1 =</span> <span class="kw">rnorm</span>(n, <span class="dv">2</span> <span class="op">*</span><span class="st"> </span>A, <span class="dv">1</span>),</span>
+<span id="cb2-6"><a href="#cb2-6"></a>  <span class="dt">Y =</span> (A<span class="op">*</span>Y1) <span class="op">+</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)<span class="op">*</span>Y0)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>ipw_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  A &lt;-<span class="st"> </span>data<span class="op">$</span>A</span>
+<span id="cb3-3"><a href="#cb3-3"></a>  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="cf">function</span>(theta, phat){</span>
+<span id="cb3-5"><a href="#cb3-5"></a>    ipw0 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>theta[<span class="dv">1</span>]</span>
+<span id="cb3-6"><a href="#cb3-6"></a>    ipw1 &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>theta[<span class="dv">2</span>]</span>
+<span id="cb3-7"><a href="#cb3-7"></a>    </span>
+<span id="cb3-8"><a href="#cb3-8"></a>    <span class="co"># Estimating functions #</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>    <span class="kw">c</span>( (<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A) <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>],</span>
+<span id="cb3-10"><a href="#cb3-10"></a>      A <span class="op">-</span><span class="st"> </span>theta[<span class="dv">2</span>],</span>
+<span id="cb3-11"><a href="#cb3-11"></a>      </span>
+<span id="cb3-12"><a href="#cb3-12"></a>      <span class="co"># Estimating IP weight</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a>      Y<span class="op">*</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)<span class="op">*</span>ipw0 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">3</span>],</span>
+<span id="cb3-14"><a href="#cb3-14"></a>      Y<span class="op">*</span>(A)<span class="op">*</span>ipw1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">4</span>],  </span>
+<span id="cb3-15"><a href="#cb3-15"></a>      </span>
+<span id="cb3-16"><a href="#cb3-16"></a>      <span class="co"># Treating IP weight as known</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a>      Y<span class="op">*</span>A<span class="op">/</span>phat <span class="op">-</span><span class="st"> </span>theta[<span class="dv">5</span>]</span>
+<span id="cb3-18"><a href="#cb3-18"></a>      )</span>
+<span id="cb3-19"><a href="#cb3-19"></a>  }</span>
+<span id="cb3-20"><a href="#cb3-20"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>phat &lt;-<span class="st"> </span><span class="kw">mean</span>(x<span class="op">$</span>A)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>out &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(ipw_estFUN,</span>
+<span id="cb4-3"><a href="#cb4-3"></a>           <span class="dt">data =</span> x,</span>
+<span id="cb4-4"><a href="#cb4-4"></a>           <span class="dt">inner_args =</span> <span class="kw">list</span>(<span class="dt">phat =</span> phat),</span>
+<span id="cb4-5"><a href="#cb4-5"></a>           <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">5</span>, <span class="fl">.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">## Comparing point estimates</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">all.equal</span>(<span class="kw">mean</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat), <span class="kw">coef</span>(out)[<span class="dv">4</span>]) </span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">all.equal</span>(phat, <span class="kw">coef</span>(out)[<span class="dv">2</span>]) </a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">all.equal</span>(phat, <span class="kw">coef</span>(out)[<span class="dv">2</span>]) </span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">## Comparing variance estimates</a>
-<a class="sourceLine" id="cb9-2" data-line-number="2">geex_vcov &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="kw">vcov</span>(out)) <span class="op">*</span><span class="st"> </span>n</a>
-<a class="sourceLine" id="cb9-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="co"># estimates match treating propensity as known</span></a>
-<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="kw">all.equal</span>(<span class="kw">var</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat) <span class="op">*</span><span class="st"> </span>(n <span class="op">-</span><span class="st"> </span><span class="dv">1</span>)<span class="op">/</span>n, geex_vcov[<span class="dv">5</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co">## Comparing variance estimates</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>geex_vcov &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="kw">vcov</span>(out)) <span class="op">*</span><span class="st"> </span>n</span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co"># estimates match treating propensity as known</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="kw">all.equal</span>(<span class="kw">var</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat) <span class="op">*</span><span class="st"> </span>(n <span class="op">-</span><span class="st"> </span><span class="dv">1</span>)<span class="op">/</span>n, geex_vcov[<span class="dv">5</span>])</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="co"># estimates match using influence function approach</span></a>
-<a class="sourceLine" id="cb11-2" data-line-number="2">y &lt;-<span class="st"> </span>x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat <span class="op">-</span><span class="st"> </span><span class="kw">mean</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat)</a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">z &lt;-<span class="st"> </span>(x<span class="op">$</span>A <span class="op">-</span><span class="st"> </span>phat) <span class="op">/</span><span class="st"> </span>(phat<span class="op">*</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>phat))</a>
-<a class="sourceLine" id="cb11-4" data-line-number="4"><span class="kw">var</span>(y <span class="op">-</span><span class="st"> </span><span class="kw">predict</span>(<span class="kw">lm</span>(y <span class="op">~</span><span class="st"> </span>z))) <span class="op">-</span><span class="st"> </span>geex_vcov[<span class="dv">4</span>] <span class="co"># close</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># estimates match using influence function approach</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>y &lt;-<span class="st"> </span>x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat <span class="op">-</span><span class="st"> </span><span class="kw">mean</span>(x<span class="op">$</span>Y <span class="op">*</span><span class="st"> </span>x<span class="op">$</span>A<span class="op">/</span>phat)</span>
+<span id="cb11-3"><a href="#cb11-3"></a>z &lt;-<span class="st"> </span>(x<span class="op">$</span>A <span class="op">-</span><span class="st"> </span>phat) <span class="op">/</span><span class="st"> </span>(phat<span class="op">*</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>phat))</span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="kw">var</span>(y <span class="op">-</span><span class="st"> </span><span class="kw">predict</span>(<span class="kw">lm</span>(y <span class="op">~</span><span class="st"> </span>z))) <span class="op">-</span><span class="st"> </span>geex_vcov[<span class="dv">4</span>] <span class="co"># close</span></span></code></pre></div>
 <pre><code>## [1] 0.005655136</code></pre>
 </div>
 <div id="ipw-estimator-of-counterfactual-mean" class="section level2">
 <h2>IPW estimator of counterfactual mean</h2>
 <p>An example <span class="math inline">\(\psi\)</span> function written in <code>R</code>. This function computes the score functions for a GLM, plus two counterfactual means estimated by inverse probability weighting.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, model, alpha){</a>
-<a class="sourceLine" id="cb13-2" data-line-number="2">  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(model, <span class="dt">data =</span> data)</a>
-<a class="sourceLine" id="cb13-3" data-line-number="3">  A &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(model, <span class="dt">data =</span> data))</a>
-<a class="sourceLine" id="cb13-4" data-line-number="4">  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</a>
-<a class="sourceLine" id="cb13-5" data-line-number="5">  </a>
-<a class="sourceLine" id="cb13-6" data-line-number="6">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb13-7" data-line-number="7">    p  &lt;-<span class="st"> </span><span class="kw">length</span>(theta)</a>
-<a class="sourceLine" id="cb13-8" data-line-number="8">    p1 &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">coef</span>(model))</a>
-<a class="sourceLine" id="cb13-9" data-line-number="9">    lp  &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>theta[<span class="dv">1</span><span class="op">:</span>p1]</a>
-<a class="sourceLine" id="cb13-10" data-line-number="10">    rho &lt;-<span class="st"> </span><span class="kw">plogis</span>(lp)</a>
-<a class="sourceLine" id="cb13-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb13-12" data-line-number="12">    hh  &lt;-<span class="st"> </span>((rho<span class="op">/</span>alpha)<span class="op">^</span>A <span class="op">*</span><span class="st"> </span>((<span class="dv">1</span><span class="op">-</span>rho)<span class="op">/</span>(<span class="dv">1</span><span class="op">-</span>alpha))<span class="op">^</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)) </a>
-<a class="sourceLine" id="cb13-13" data-line-number="13">    IPW &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="kw">exp</span>(<span class="kw">sum</span>(<span class="kw">log</span>(hh))))</a>
-<a class="sourceLine" id="cb13-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb13-15" data-line-number="15">    score_eqns &lt;-<span class="st"> </span><span class="kw">apply</span>(X, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="kw">sum</span>((A <span class="op">-</span><span class="st"> </span>rho) <span class="op">*</span><span class="st"> </span>x))</a>
-<a class="sourceLine" id="cb13-16" data-line-number="16">    ce0 &lt;-<span class="st"> </span><span class="kw">mean</span>(Y <span class="op">*</span><span class="st"> </span>(A <span class="op">==</span><span class="st"> </span><span class="dv">0</span>)) <span class="op">*</span><span class="st"> </span>IPW <span class="op">/</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>alpha)</a>
-<a class="sourceLine" id="cb13-17" data-line-number="17">    ce1 &lt;-<span class="st"> </span><span class="kw">mean</span>(Y <span class="op">*</span><span class="st"> </span>(A <span class="op">==</span><span class="st"> </span><span class="dv">1</span>)) <span class="op">*</span><span class="st"> </span>IPW <span class="op">/</span><span class="st"> </span>(alpha)</a>
-<a class="sourceLine" id="cb13-18" data-line-number="18">    </a>
-<a class="sourceLine" id="cb13-19" data-line-number="19">    <span class="kw">c</span>(score_eqns,</a>
-<a class="sourceLine" id="cb13-20" data-line-number="20">      ce0 <span class="op">-</span><span class="st"> </span>theta[p <span class="op">-</span><span class="st"> </span><span class="dv">1</span>],</a>
-<a class="sourceLine" id="cb13-21" data-line-number="21">      ce1 <span class="op">-</span><span class="st"> </span>theta[p])</a>
-<a class="sourceLine" id="cb13-22" data-line-number="22">  }</a>
-<a class="sourceLine" id="cb13-23" data-line-number="23">}</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, model, alpha){</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(model, <span class="dt">data =</span> data)</span>
+<span id="cb13-3"><a href="#cb13-3"></a>  A &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(model, <span class="dt">data =</span> data))</span>
+<span id="cb13-4"><a href="#cb13-4"></a>  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</span>
+<span id="cb13-5"><a href="#cb13-5"></a>  </span>
+<span id="cb13-6"><a href="#cb13-6"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb13-7"><a href="#cb13-7"></a>    p  &lt;-<span class="st"> </span><span class="kw">length</span>(theta)</span>
+<span id="cb13-8"><a href="#cb13-8"></a>    p1 &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">coef</span>(model))</span>
+<span id="cb13-9"><a href="#cb13-9"></a>    lp  &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>theta[<span class="dv">1</span><span class="op">:</span>p1]</span>
+<span id="cb13-10"><a href="#cb13-10"></a>    rho &lt;-<span class="st"> </span><span class="kw">plogis</span>(lp)</span>
+<span id="cb13-11"><a href="#cb13-11"></a></span>
+<span id="cb13-12"><a href="#cb13-12"></a>    hh  &lt;-<span class="st"> </span>((rho<span class="op">/</span>alpha)<span class="op">^</span>A <span class="op">*</span><span class="st"> </span>((<span class="dv">1</span><span class="op">-</span>rho)<span class="op">/</span>(<span class="dv">1</span><span class="op">-</span>alpha))<span class="op">^</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>A)) </span>
+<span id="cb13-13"><a href="#cb13-13"></a>    IPW &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="kw">exp</span>(<span class="kw">sum</span>(<span class="kw">log</span>(hh))))</span>
+<span id="cb13-14"><a href="#cb13-14"></a></span>
+<span id="cb13-15"><a href="#cb13-15"></a>    score_eqns &lt;-<span class="st"> </span><span class="kw">apply</span>(X, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="kw">sum</span>((A <span class="op">-</span><span class="st"> </span>rho) <span class="op">*</span><span class="st"> </span>x))</span>
+<span id="cb13-16"><a href="#cb13-16"></a>    ce0 &lt;-<span class="st"> </span><span class="kw">mean</span>(Y <span class="op">*</span><span class="st"> </span>(A <span class="op">==</span><span class="st"> </span><span class="dv">0</span>)) <span class="op">*</span><span class="st"> </span>IPW <span class="op">/</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>alpha)</span>
+<span id="cb13-17"><a href="#cb13-17"></a>    ce1 &lt;-<span class="st"> </span><span class="kw">mean</span>(Y <span class="op">*</span><span class="st"> </span>(A <span class="op">==</span><span class="st"> </span><span class="dv">1</span>)) <span class="op">*</span><span class="st"> </span>IPW <span class="op">/</span><span class="st"> </span>(alpha)</span>
+<span id="cb13-18"><a href="#cb13-18"></a>    </span>
+<span id="cb13-19"><a href="#cb13-19"></a>    <span class="kw">c</span>(score_eqns,</span>
+<span id="cb13-20"><a href="#cb13-20"></a>      ce0 <span class="op">-</span><span class="st"> </span>theta[p <span class="op">-</span><span class="st"> </span><span class="dv">1</span>],</span>
+<span id="cb13-21"><a href="#cb13-21"></a>      ce1 <span class="op">-</span><span class="st"> </span>theta[p])</span>
+<span id="cb13-22"><a href="#cb13-22"></a>  }</span>
+<span id="cb13-23"><a href="#cb13-23"></a>}</span></code></pre></div>
 <p>Compare to what <code>inferference</code> gets.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">test &lt;-<span class="st"> </span><span class="kw">interference</span>(</a>
-<a class="sourceLine" id="cb14-2" data-line-number="2">  <span class="dt">formula =</span> Y <span class="op">|</span><span class="st"> </span>A <span class="op">~</span><span class="st"> </span>X1 <span class="op">|</span><span class="st"> </span>group, </a>
-<a class="sourceLine" id="cb14-3" data-line-number="3">  <span class="dt">data   =</span> vaccinesim,</a>
-<a class="sourceLine" id="cb14-4" data-line-number="4">  <span class="dt">model_method =</span> <span class="st">'glm'</span>,</a>
-<a class="sourceLine" id="cb14-5" data-line-number="5">  <span class="dt">allocations =</span> <span class="kw">c</span>(.<span class="dv">35</span>, <span class="fl">.4</span>))</a>
-<a class="sourceLine" id="cb14-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb14-7" data-line-number="7">mglm &lt;-<span class="st"> </span><span class="kw">glm</span>(A <span class="op">~</span><span class="st"> </span>X1, <span class="dt">data =</span> vaccinesim, <span class="dt">family =</span> binomial)</a>
-<a class="sourceLine" id="cb14-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb14-9" data-line-number="9">ce_estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb14-10" data-line-number="10">  <span class="dt">estFUN =</span> eefun,</a>
-<a class="sourceLine" id="cb14-11" data-line-number="11">  <span class="dt">data  =</span> vaccinesim,</a>
-<a class="sourceLine" id="cb14-12" data-line-number="12">  <span class="dt">units =</span> <span class="st">'group'</span>,</a>
-<a class="sourceLine" id="cb14-13" data-line-number="13">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="kw">coef</span>(mglm), <span class="fl">.4</span>,  <span class="fl">.13</span>)),</a>
-<a class="sourceLine" id="cb14-14" data-line-number="14">  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">alpha =</span> <span class="fl">.35</span>, <span class="dt">model =</span> mglm)</a>
-<a class="sourceLine" id="cb14-15" data-line-number="15">)</a>
-<a class="sourceLine" id="cb14-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb14-17" data-line-number="17"><span class="kw">roots</span>(ce_estimates)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>test &lt;-<span class="st"> </span><span class="kw">interference</span>(</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="dt">formula =</span> Y <span class="op">|</span><span class="st"> </span>A <span class="op">~</span><span class="st"> </span>X1 <span class="op">|</span><span class="st"> </span>group, </span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="dt">data   =</span> vaccinesim,</span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="dt">model_method =</span> <span class="st">&#39;glm&#39;</span>,</span>
+<span id="cb14-5"><a href="#cb14-5"></a>  <span class="dt">allocations =</span> <span class="kw">c</span>(.<span class="dv">35</span>, <span class="fl">.4</span>))</span></code></pre></div>
+<pre><code>## Registered S3 methods overwritten by &#39;lme4&#39;:
+##   method                          from
+##   cooks.distance.influence.merMod car 
+##   influence.merMod                car 
+##   dfbeta.influence.merMod         car 
+##   dfbetas.influence.merMod        car</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>mglm &lt;-<span class="st"> </span><span class="kw">glm</span>(A <span class="op">~</span><span class="st"> </span>X1, <span class="dt">data =</span> vaccinesim, <span class="dt">family =</span> binomial)</span>
+<span id="cb16-2"><a href="#cb16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3"></a>ce_estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="dt">estFUN =</span> eefun,</span>
+<span id="cb16-5"><a href="#cb16-5"></a>  <span class="dt">data  =</span> vaccinesim,</span>
+<span id="cb16-6"><a href="#cb16-6"></a>  <span class="dt">units =</span> <span class="st">&#39;group&#39;</span>,</span>
+<span id="cb16-7"><a href="#cb16-7"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="kw">coef</span>(mglm), <span class="fl">.4</span>,  <span class="fl">.13</span>)),</span>
+<span id="cb16-8"><a href="#cb16-8"></a>  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">alpha =</span> <span class="fl">.35</span>, <span class="dt">model =</span> mglm)</span>
+<span id="cb16-9"><a href="#cb16-9"></a>)</span>
+<span id="cb16-10"><a href="#cb16-10"></a></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="kw">roots</span>(ce_estimates)</span></code></pre></div>
 <pre><code>## (Intercept)          X1                         
 ## -0.36869683 -0.02037916  0.42186669  0.15507946</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="co"># Compare parameter estimates</span></a>
-<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="kw">direct_effect</span>(test, <span class="dt">allocation =</span> <span class="fl">.35</span>)<span class="op">$</span>estimate</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co"># Compare parameter estimates</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="kw">direct_effect</span>(test, <span class="dt">allocation =</span> <span class="fl">.35</span>)<span class="op">$</span>estimate</span></code></pre></div>
 <pre><code>## [1] 0.2667872</code></pre>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="kw">roots</span>(ce_estimates)[<span class="dv">3</span>] <span class="op">-</span><span class="st"> </span><span class="kw">roots</span>(ce_estimates)[<span class="dv">4</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">roots</span>(ce_estimates)[<span class="dv">3</span>] <span class="op">-</span><span class="st"> </span><span class="kw">roots</span>(ce_estimates)[<span class="dv">4</span>]</span></code></pre></div>
 <pre><code>##           
 ## 0.2667872</code></pre>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="co"># conpare SE estimates</span></a>
-<a class="sourceLine" id="cb20-2" data-line-number="2">L &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">-1</span>)</a>
-<a class="sourceLine" id="cb20-3" data-line-number="3">Sigma &lt;-<span class="st"> </span><span class="kw">vcov</span>(ce_estimates)</a>
-<a class="sourceLine" id="cb20-4" data-line-number="4"><span class="kw">sqrt</span>(<span class="kw">t</span>(L) <span class="op">%*%</span><span class="st"> </span>Sigma <span class="op">%*%</span><span class="st"> </span>L)  <span class="co"># from GEEX</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># conpare SE estimates</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>L &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">-1</span>)</span>
+<span id="cb22-3"><a href="#cb22-3"></a>Sigma &lt;-<span class="st"> </span><span class="kw">vcov</span>(ce_estimates)</span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="kw">sqrt</span>(<span class="kw">t</span>(L) <span class="op">%*%</span><span class="st"> </span>Sigma <span class="op">%*%</span><span class="st"> </span>L)  <span class="co"># from GEEX</span></span></code></pre></div>
 <pre><code>##            [,1]
 ## [1,] 0.03716025</code></pre>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="kw">direct_effect</span>(test, <span class="dt">allocation =</span> <span class="fl">.35</span>)<span class="op">$</span>std.error <span class="co"># from inferference</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">direct_effect</span>(test, <span class="dt">allocation =</span> <span class="fl">.35</span>)<span class="op">$</span>std.error <span class="co"># from inferference</span></span></code></pre></div>
 <pre><code>## [1] 0.02602316</code></pre>
-<p>I would expect them to be somewhat different, since <code>inferference</code> uses a slightly different variance estimator defined in the <a href="http://onlinelibrary.wiley.com/store/10.1111/biom.12184/asset/supinfo/biom12184-sm-0001-SuppData.pdf?v=1&amp;s=f54ecbc59e7600cd32e8f5c110d395f0a34b3fb8">web appendix of Perez-Heydrich et al (2014)</a>.</p>
+<p>I would expect them to be somewhat different, since <code>inferference</code> uses a slightly different variance estimator defined in the <a href="https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fbiom.12184&amp;file=biom12184-sm-0001-SuppData.pdf">web appendix of Perez-Heydrich et al (2014)</a>.</p>
 </div>
 <div id="doubly-robust-estimator" class="section level2">
 <h2>Doubly-Robust Estimator</h2>
@@ -415,88 +444,88 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 \end{equation}\]</span></p>
 <p>This estimator targets the average causal effect, <span class="math inline">\(\Delta = \E[Y(1) - Y(0)]\)</span>, where <span class="math inline">\(Y(z)\)</span> is the potential outcome for an experimental unit had it been exposed to the level <span class="math inline">\(z\)</span> of the binary exposure variable <span class="math inline">\(Z\)</span>. The estimated propsensity score, <span class="math inline">\(\hat{e}_i\)</span>, is the estimated probability that unit <span class="math inline">\(i\)</span> received <span class="math inline">\(z = 1\)</span> and <span class="math inline">\(m_z(X_i, \hat{\alpha}_z)\)</span> are regression models for the outcome with baseline covariates <span class="math inline">\(X_i\)</span> and estimated paramaters <span class="math inline">\(\hat{\alpha}_z\)</span>. This estimator has the property that if either the propensity score models or the outcome models are correctly specified, then the solution to Equation~ will be a consistent and asymptotically Normal estimator of <span class="math inline">\(\Delta\)</span>.</p>
 <p>This estimator and its estimating equations can be translated into an <code>estFUN</code> as:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">dr_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data, models){</a>
-<a class="sourceLine" id="cb24-2" data-line-number="2">  </a>
-<a class="sourceLine" id="cb24-3" data-line-number="3">  Z &lt;-<span class="st"> </span>data<span class="op">$</span>Z</a>
-<a class="sourceLine" id="cb24-4" data-line-number="4">  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</a>
-<a class="sourceLine" id="cb24-5" data-line-number="5">  </a>
-<a class="sourceLine" id="cb24-6" data-line-number="6">  Xe &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</a>
-<a class="sourceLine" id="cb24-7" data-line-number="7">    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>e))</a>
-<a class="sourceLine" id="cb24-8" data-line-number="8">  Xm0 &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</a>
-<a class="sourceLine" id="cb24-9" data-line-number="9">    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>m0))</a>
-<a class="sourceLine" id="cb24-10" data-line-number="10">  Xm1 &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</a>
-<a class="sourceLine" id="cb24-11" data-line-number="11">    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>m1))</a>
-<a class="sourceLine" id="cb24-12" data-line-number="12">  </a>
-<a class="sourceLine" id="cb24-13" data-line-number="13">  e_pos  &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="kw">ncol</span>(Xe)</a>
-<a class="sourceLine" id="cb24-14" data-line-number="14">  m0_pos &lt;-<span class="st"> </span>(<span class="kw">max</span>(e_pos) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)<span class="op">:</span>(<span class="kw">max</span>(e_pos) <span class="op">+</span><span class="st"> </span><span class="kw">ncol</span>(Xm0))</a>
-<a class="sourceLine" id="cb24-15" data-line-number="15">  m1_pos &lt;-<span class="st"> </span>(<span class="kw">max</span>(m0_pos) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)<span class="op">:</span>(<span class="kw">max</span>(m0_pos) <span class="op">+</span><span class="st"> </span><span class="kw">ncol</span>(Xm1))</a>
-<a class="sourceLine" id="cb24-16" data-line-number="16">  </a>
-<a class="sourceLine" id="cb24-17" data-line-number="17">  e_scores  &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>e, data)</a>
-<a class="sourceLine" id="cb24-18" data-line-number="18">  m0_scores &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>m0, data)</a>
-<a class="sourceLine" id="cb24-19" data-line-number="19">  m1_scores &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>m1, data)</a>
-<a class="sourceLine" id="cb24-20" data-line-number="20">  </a>
-<a class="sourceLine" id="cb24-21" data-line-number="21">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb24-22" data-line-number="22">    e  &lt;-<span class="st"> </span><span class="kw">plogis</span>(Xe <span class="op">%*%</span><span class="st"> </span>theta[e_pos]) </a>
-<a class="sourceLine" id="cb24-23" data-line-number="23">    m0 &lt;-<span class="st"> </span>Xm0 <span class="op">%*%</span><span class="st"> </span>theta[m0_pos] </a>
-<a class="sourceLine" id="cb24-24" data-line-number="24">    m1 &lt;-<span class="st"> </span>Xm1 <span class="op">%*%</span><span class="st"> </span>theta[m1_pos] </a>
-<a class="sourceLine" id="cb24-25" data-line-number="25">    rd_hat &lt;-<span class="st"> </span>(Z<span class="op">*</span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m1)<span class="op">/</span>e <span class="op">-</span><span class="st"> </span>((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>Z) <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m0)<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>e)</a>
-<a class="sourceLine" id="cb24-26" data-line-number="26">    <span class="kw">c</span>(<span class="kw">e_scores</span>(theta[e_pos]),</a>
-<a class="sourceLine" id="cb24-27" data-line-number="27">      <span class="kw">m0_scores</span>(theta[m0_pos]) <span class="op">*</span><span class="st"> </span>(Z <span class="op">==</span><span class="st"> </span><span class="dv">0</span>),</a>
-<a class="sourceLine" id="cb24-28" data-line-number="28">      <span class="kw">m1_scores</span>(theta[m1_pos]) <span class="op">*</span><span class="st"> </span>(Z <span class="op">==</span><span class="st"> </span><span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb24-29" data-line-number="29">      rd_hat <span class="op">-</span><span class="st"> </span>theta[<span class="kw">length</span>(theta)])  </a>
-<a class="sourceLine" id="cb24-30" data-line-number="30">  }</a>
-<a class="sourceLine" id="cb24-31" data-line-number="31">}</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>dr_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data, models){</span>
+<span id="cb26-2"><a href="#cb26-2"></a>  </span>
+<span id="cb26-3"><a href="#cb26-3"></a>  Z &lt;-<span class="st"> </span>data<span class="op">$</span>Z</span>
+<span id="cb26-4"><a href="#cb26-4"></a>  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y</span>
+<span id="cb26-5"><a href="#cb26-5"></a>  </span>
+<span id="cb26-6"><a href="#cb26-6"></a>  Xe &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</span>
+<span id="cb26-7"><a href="#cb26-7"></a>    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>e))</span>
+<span id="cb26-8"><a href="#cb26-8"></a>  Xm0 &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</span>
+<span id="cb26-9"><a href="#cb26-9"></a>    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>m0))</span>
+<span id="cb26-10"><a href="#cb26-10"></a>  Xm1 &lt;-<span class="st"> </span><span class="kw">grab_design_matrix</span>(</span>
+<span id="cb26-11"><a href="#cb26-11"></a>    data, <span class="dt">rhs_formula =</span> <span class="kw">grab_fixed_formula</span>(models<span class="op">$</span>m1))</span>
+<span id="cb26-12"><a href="#cb26-12"></a>  </span>
+<span id="cb26-13"><a href="#cb26-13"></a>  e_pos  &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">:</span><span class="kw">ncol</span>(Xe)</span>
+<span id="cb26-14"><a href="#cb26-14"></a>  m0_pos &lt;-<span class="st"> </span>(<span class="kw">max</span>(e_pos) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)<span class="op">:</span>(<span class="kw">max</span>(e_pos) <span class="op">+</span><span class="st"> </span><span class="kw">ncol</span>(Xm0))</span>
+<span id="cb26-15"><a href="#cb26-15"></a>  m1_pos &lt;-<span class="st"> </span>(<span class="kw">max</span>(m0_pos) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)<span class="op">:</span>(<span class="kw">max</span>(m0_pos) <span class="op">+</span><span class="st"> </span><span class="kw">ncol</span>(Xm1))</span>
+<span id="cb26-16"><a href="#cb26-16"></a>  </span>
+<span id="cb26-17"><a href="#cb26-17"></a>  e_scores  &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>e, data)</span>
+<span id="cb26-18"><a href="#cb26-18"></a>  m0_scores &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>m0, data)</span>
+<span id="cb26-19"><a href="#cb26-19"></a>  m1_scores &lt;-<span class="st"> </span><span class="kw">grab_psiFUN</span>(models<span class="op">$</span>m1, data)</span>
+<span id="cb26-20"><a href="#cb26-20"></a>  </span>
+<span id="cb26-21"><a href="#cb26-21"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb26-22"><a href="#cb26-22"></a>    e  &lt;-<span class="st"> </span><span class="kw">plogis</span>(Xe <span class="op">%*%</span><span class="st"> </span>theta[e_pos]) </span>
+<span id="cb26-23"><a href="#cb26-23"></a>    m0 &lt;-<span class="st"> </span>Xm0 <span class="op">%*%</span><span class="st"> </span>theta[m0_pos] </span>
+<span id="cb26-24"><a href="#cb26-24"></a>    m1 &lt;-<span class="st"> </span>Xm1 <span class="op">%*%</span><span class="st"> </span>theta[m1_pos] </span>
+<span id="cb26-25"><a href="#cb26-25"></a>    rd_hat &lt;-<span class="st"> </span>(Z<span class="op">*</span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m1)<span class="op">/</span>e <span class="op">-</span><span class="st"> </span>((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>Z) <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m0)<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>e)</span>
+<span id="cb26-26"><a href="#cb26-26"></a>    <span class="kw">c</span>(<span class="kw">e_scores</span>(theta[e_pos]),</span>
+<span id="cb26-27"><a href="#cb26-27"></a>      <span class="kw">m0_scores</span>(theta[m0_pos]) <span class="op">*</span><span class="st"> </span>(Z <span class="op">==</span><span class="st"> </span><span class="dv">0</span>),</span>
+<span id="cb26-28"><a href="#cb26-28"></a>      <span class="kw">m1_scores</span>(theta[m1_pos]) <span class="op">*</span><span class="st"> </span>(Z <span class="op">==</span><span class="st"> </span><span class="dv">1</span>),</span>
+<span id="cb26-29"><a href="#cb26-29"></a>      rd_hat <span class="op">-</span><span class="st"> </span>theta[<span class="kw">length</span>(theta)])  </span>
+<span id="cb26-30"><a href="#cb26-30"></a>  }</span>
+<span id="cb26-31"><a href="#cb26-31"></a>}</span></code></pre></div>
 <p>This <code>estFUN</code> presumes that the user will pass a list containing fitted model objects for the three nuisance models: the propensity score model and one regression model for each treatment group. The functions <code>grab_design_matrix</code> and <code>grab_fixed_formula</code> are <code>geex</code> utilities for extracting relevant pieces of a model object. The function <code>grab_psiFUN</code> converts a fitted model object to an estimating function; for example, for a <code>glm</code> object, <code>grab_psiFUN</code> uses the  to create a <code>function</code> of <code>theta</code> corresponding to the generalized linear model score function. The <code>m_estimate</code> function can be wrapped in another function, wherein nuisance models are fit and passed to <code>m_estimate</code>.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1">estimate_dr &lt;-<span class="st"> </span><span class="cf">function</span>(data, propensity_formula, outcome_formula){</a>
-<a class="sourceLine" id="cb25-2" data-line-number="2">  e_model  &lt;-<span class="st"> </span><span class="kw">glm</span>(propensity_formula, <span class="dt">data =</span> data, <span class="dt">family =</span> binomial)</a>
-<a class="sourceLine" id="cb25-3" data-line-number="3">  m0_model &lt;-<span class="st"> </span><span class="kw">glm</span>(outcome_formula, <span class="dt">subset =</span> (Z <span class="op">==</span><span class="st"> </span><span class="dv">0</span>), <span class="dt">data =</span> data)</a>
-<a class="sourceLine" id="cb25-4" data-line-number="4">  m1_model &lt;-<span class="st"> </span><span class="kw">glm</span>(outcome_formula, <span class="dt">subset =</span> (Z <span class="op">==</span><span class="st"> </span><span class="dv">1</span>), <span class="dt">data =</span> data)</a>
-<a class="sourceLine" id="cb25-5" data-line-number="5">  models &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">e =</span> e_model, <span class="dt">m0 =</span> m0_model, <span class="dt">m1 =</span> m1_model)</a>
-<a class="sourceLine" id="cb25-6" data-line-number="6">  nparms &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(models, <span class="cf">function</span>(x) <span class="kw">length</span>(<span class="kw">coef</span>(x))))) <span class="op">+</span><span class="st"> </span><span class="dv">1</span></a>
-<a class="sourceLine" id="cb25-7" data-line-number="7">  </a>
-<a class="sourceLine" id="cb25-8" data-line-number="8">  <span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb25-9" data-line-number="9">    <span class="dt">estFUN =</span> dr_estFUN,</a>
-<a class="sourceLine" id="cb25-10" data-line-number="10">    <span class="dt">data   =</span> data,</a>
-<a class="sourceLine" id="cb25-11" data-line-number="11">    <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">rep</span>(<span class="dv">0</span>, nparms)),</a>
-<a class="sourceLine" id="cb25-12" data-line-number="12">    <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">models =</span> models))</a>
-<a class="sourceLine" id="cb25-13" data-line-number="13">}</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>estimate_dr &lt;-<span class="st"> </span><span class="cf">function</span>(data, propensity_formula, outcome_formula){</span>
+<span id="cb27-2"><a href="#cb27-2"></a>  e_model  &lt;-<span class="st"> </span><span class="kw">glm</span>(propensity_formula, <span class="dt">data =</span> data, <span class="dt">family =</span> binomial)</span>
+<span id="cb27-3"><a href="#cb27-3"></a>  m0_model &lt;-<span class="st"> </span><span class="kw">glm</span>(outcome_formula, <span class="dt">subset =</span> (Z <span class="op">==</span><span class="st"> </span><span class="dv">0</span>), <span class="dt">data =</span> data)</span>
+<span id="cb27-4"><a href="#cb27-4"></a>  m1_model &lt;-<span class="st"> </span><span class="kw">glm</span>(outcome_formula, <span class="dt">subset =</span> (Z <span class="op">==</span><span class="st"> </span><span class="dv">1</span>), <span class="dt">data =</span> data)</span>
+<span id="cb27-5"><a href="#cb27-5"></a>  models &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">e =</span> e_model, <span class="dt">m0 =</span> m0_model, <span class="dt">m1 =</span> m1_model)</span>
+<span id="cb27-6"><a href="#cb27-6"></a>  nparms &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(models, <span class="cf">function</span>(x) <span class="kw">length</span>(<span class="kw">coef</span>(x))))) <span class="op">+</span><span class="st"> </span><span class="dv">1</span></span>
+<span id="cb27-7"><a href="#cb27-7"></a>  </span>
+<span id="cb27-8"><a href="#cb27-8"></a>  <span class="kw">m_estimate</span>(</span>
+<span id="cb27-9"><a href="#cb27-9"></a>    <span class="dt">estFUN =</span> dr_estFUN,</span>
+<span id="cb27-10"><a href="#cb27-10"></a>    <span class="dt">data   =</span> data,</span>
+<span id="cb27-11"><a href="#cb27-11"></a>    <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">rep</span>(<span class="dv">0</span>, nparms)),</span>
+<span id="cb27-12"><a href="#cb27-12"></a>    <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">models =</span> models))</span>
+<span id="cb27-13"><a href="#cb27-13"></a>}</span></code></pre></div>
 <p>The following code provides a function to replicate the simulation settings of <span class="citation">Lunceford and Davidian (2004)</span>.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="kw">library</span>(mvtnorm)</a>
-<a class="sourceLine" id="cb26-2" data-line-number="2">tau_<span class="dv">0</span> &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb26-3" data-line-number="3">tau_<span class="dv">1</span> &lt;-<span class="st"> </span>tau_<span class="dv">0</span> <span class="op">*</span><span class="st"> </span><span class="dv">-1</span></a>
-<a class="sourceLine" id="cb26-4" data-line-number="4">Sigma_X3 &lt;-<span class="st"> </span><span class="kw">matrix</span>(</a>
-<a class="sourceLine" id="cb26-5" data-line-number="5">   <span class="kw">c</span>(<span class="dv">1</span>, <span class="fl">0.5</span>, <span class="fl">-0.5</span>, <span class="fl">-0.5</span>,</a>
-<a class="sourceLine" id="cb26-6" data-line-number="6">     <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="fl">-0.5</span>, <span class="fl">-0.5</span>,</a>
-<a class="sourceLine" id="cb26-7" data-line-number="7">     <span class="fl">-0.5</span>, <span class="fl">-0.5</span>, <span class="dv">1</span>, <span class="fl">0.5</span>,</a>
-<a class="sourceLine" id="cb26-8" data-line-number="8">     <span class="fl">-0.5</span>, <span class="fl">-0.5</span>, <span class="fl">0.5</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">4</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb26-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb26-10" data-line-number="10">gen_data &lt;-<span class="st"> </span><span class="cf">function</span>(n, beta, nu, xi){</a>
-<a class="sourceLine" id="cb26-11" data-line-number="11">  X3 &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.2</span>)</a>
-<a class="sourceLine" id="cb26-12" data-line-number="12">  V3 &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> (<span class="fl">0.75</span> <span class="op">*</span><span class="st"> </span>X3 <span class="op">+</span><span class="st"> </span>(<span class="fl">0.25</span> <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>X3))))</a>
-<a class="sourceLine" id="cb26-13" data-line-number="13">  hold &lt;-<span class="st"> </span><span class="kw">rmvnorm</span>(n,  <span class="dt">mean =</span> <span class="kw">rep</span>(<span class="dv">0</span>, <span class="dv">4</span>), Sigma_X3)</a>
-<a class="sourceLine" id="cb26-14" data-line-number="14">  <span class="kw">colnames</span>(hold) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;V1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;V2&quot;</span>)</a>
-<a class="sourceLine" id="cb26-15" data-line-number="15">  hold &lt;-<span class="st"> </span><span class="kw">cbind</span>(hold, X3, V3)</a>
-<a class="sourceLine" id="cb26-16" data-line-number="16">  hold &lt;-<span class="st"> </span><span class="kw">apply</span>(hold, <span class="dv">1</span>, <span class="cf">function</span>(x){</a>
-<a class="sourceLine" id="cb26-17" data-line-number="17">    x[<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] &lt;-<span class="st"> </span>x[<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] <span class="op">+</span><span class="st"> </span>tau_<span class="dv">1</span><span class="op">^</span>(x[<span class="dv">5</span>])<span class="op">*</span>tau_<span class="dv">0</span><span class="op">^</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>x[<span class="dv">5</span>])</a>
-<a class="sourceLine" id="cb26-18" data-line-number="18">    x})</a>
-<a class="sourceLine" id="cb26-19" data-line-number="19">  hold &lt;-<span class="st"> </span><span class="kw">t</span>(hold)[, <span class="kw">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>, <span class="st">&quot;V1&quot;</span>, <span class="st">&quot;V2&quot;</span>, <span class="st">&quot;V3&quot;</span>)]</a>
-<a class="sourceLine" id="cb26-20" data-line-number="20">  X &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="dt">Int =</span> <span class="dv">1</span>, hold)</a>
-<a class="sourceLine" id="cb26-21" data-line-number="21">  Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> <span class="kw">plogis</span>(X[, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] <span class="op">%*%</span><span class="st"> </span>beta))</a>
-<a class="sourceLine" id="cb26-22" data-line-number="22">  X &lt;-<span class="st"> </span><span class="kw">cbind</span>(X[, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>], Z, X[, <span class="dv">5</span><span class="op">:</span><span class="dv">7</span>])</a>
-<a class="sourceLine" id="cb26-23" data-line-number="23">  <span class="kw">data.frame</span>(</a>
-<a class="sourceLine" id="cb26-24" data-line-number="24">    <span class="dt">Y =</span> X <span class="op">%*%</span><span class="st"> </span><span class="kw">c</span>(nu, xi) <span class="op">+</span><span class="st"> </span><span class="kw">rnorm</span>(n), </a>
-<a class="sourceLine" id="cb26-25" data-line-number="25">    X[ , <span class="dv">-1</span>])</a>
-<a class="sourceLine" id="cb26-26" data-line-number="26">}</a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="kw">library</span>(mvtnorm)</span>
+<span id="cb28-2"><a href="#cb28-2"></a>tau_<span class="dv">0</span> &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb28-3"><a href="#cb28-3"></a>tau_<span class="dv">1</span> &lt;-<span class="st"> </span>tau_<span class="dv">0</span> <span class="op">*</span><span class="st"> </span><span class="dv">-1</span></span>
+<span id="cb28-4"><a href="#cb28-4"></a>Sigma_X3 &lt;-<span class="st"> </span><span class="kw">matrix</span>(</span>
+<span id="cb28-5"><a href="#cb28-5"></a>   <span class="kw">c</span>(<span class="dv">1</span>, <span class="fl">0.5</span>, <span class="fl">-0.5</span>, <span class="fl">-0.5</span>,</span>
+<span id="cb28-6"><a href="#cb28-6"></a>     <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="fl">-0.5</span>, <span class="fl">-0.5</span>,</span>
+<span id="cb28-7"><a href="#cb28-7"></a>     <span class="fl">-0.5</span>, <span class="fl">-0.5</span>, <span class="dv">1</span>, <span class="fl">0.5</span>,</span>
+<span id="cb28-8"><a href="#cb28-8"></a>     <span class="fl">-0.5</span>, <span class="fl">-0.5</span>, <span class="fl">0.5</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">4</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb28-9"><a href="#cb28-9"></a></span>
+<span id="cb28-10"><a href="#cb28-10"></a>gen_data &lt;-<span class="st"> </span><span class="cf">function</span>(n, beta, nu, xi){</span>
+<span id="cb28-11"><a href="#cb28-11"></a>  X3 &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.2</span>)</span>
+<span id="cb28-12"><a href="#cb28-12"></a>  V3 &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> (<span class="fl">0.75</span> <span class="op">*</span><span class="st"> </span>X3 <span class="op">+</span><span class="st"> </span>(<span class="fl">0.25</span> <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>X3))))</span>
+<span id="cb28-13"><a href="#cb28-13"></a>  hold &lt;-<span class="st"> </span><span class="kw">rmvnorm</span>(n,  <span class="dt">mean =</span> <span class="kw">rep</span>(<span class="dv">0</span>, <span class="dv">4</span>), Sigma_X3)</span>
+<span id="cb28-14"><a href="#cb28-14"></a>  <span class="kw">colnames</span>(hold) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;V1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;V2&quot;</span>)</span>
+<span id="cb28-15"><a href="#cb28-15"></a>  hold &lt;-<span class="st"> </span><span class="kw">cbind</span>(hold, X3, V3)</span>
+<span id="cb28-16"><a href="#cb28-16"></a>  hold &lt;-<span class="st"> </span><span class="kw">apply</span>(hold, <span class="dv">1</span>, <span class="cf">function</span>(x){</span>
+<span id="cb28-17"><a href="#cb28-17"></a>    x[<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] &lt;-<span class="st"> </span>x[<span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] <span class="op">+</span><span class="st"> </span>tau_<span class="dv">1</span><span class="op">^</span>(x[<span class="dv">5</span>])<span class="op">*</span>tau_<span class="dv">0</span><span class="op">^</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>x[<span class="dv">5</span>])</span>
+<span id="cb28-18"><a href="#cb28-18"></a>    x})</span>
+<span id="cb28-19"><a href="#cb28-19"></a>  hold &lt;-<span class="st"> </span><span class="kw">t</span>(hold)[, <span class="kw">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>, <span class="st">&quot;V1&quot;</span>, <span class="st">&quot;V2&quot;</span>, <span class="st">&quot;V3&quot;</span>)]</span>
+<span id="cb28-20"><a href="#cb28-20"></a>  X &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="dt">Int =</span> <span class="dv">1</span>, hold)</span>
+<span id="cb28-21"><a href="#cb28-21"></a>  Z &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="dt">prob =</span> <span class="kw">plogis</span>(X[, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>] <span class="op">%*%</span><span class="st"> </span>beta))</span>
+<span id="cb28-22"><a href="#cb28-22"></a>  X &lt;-<span class="st"> </span><span class="kw">cbind</span>(X[, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>], Z, X[, <span class="dv">5</span><span class="op">:</span><span class="dv">7</span>])</span>
+<span id="cb28-23"><a href="#cb28-23"></a>  <span class="kw">data.frame</span>(</span>
+<span id="cb28-24"><a href="#cb28-24"></a>    <span class="dt">Y =</span> X <span class="op">%*%</span><span class="st"> </span><span class="kw">c</span>(nu, xi) <span class="op">+</span><span class="st"> </span><span class="kw">rnorm</span>(n), </span>
+<span id="cb28-25"><a href="#cb28-25"></a>    X[ , <span class="dv">-1</span>])</span>
+<span id="cb28-26"><a href="#cb28-26"></a>}</span></code></pre></div>
 <p>To show that <code>estimate_dr</code> correctly computes <span class="math inline">\(\hat{\Delta}_{DR}\)</span>, the results from <code>geex</code> can be compared to computing <span class="math inline">\(\hat{\Delta}_{DR}\)</span> “by hand” for a simulated dataset.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">dt &lt;-<span class="st"> </span><span class="kw">gen_data</span>(<span class="dv">1000</span>, <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">0.6</span>, <span class="fl">-0.6</span>, <span class="fl">0.6</span>), <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">2</span>), <span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>))</a>
-<a class="sourceLine" id="cb27-2" data-line-number="2">geex_results &lt;-<span class="st"> </span><span class="kw">estimate_dr</span>(dt, Z <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3)</a></code></pre></div>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1">e  &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Z <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>),</a>
-<a class="sourceLine" id="cb28-2" data-line-number="2">              <span class="dt">type =</span> <span class="st">&quot;response&quot;</span>)</a>
-<a class="sourceLine" id="cb28-3" data-line-number="3">m0 &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">subset =</span> Z<span class="op">==</span><span class="dv">0</span>), <span class="dt">newdata =</span> dt)</a>
-<a class="sourceLine" id="cb28-4" data-line-number="4">m1 &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">subset =</span> Z<span class="op">==</span><span class="dv">1</span>), <span class="dt">newdata =</span> dt)</a>
-<a class="sourceLine" id="cb28-5" data-line-number="5">del_hat &lt;-<span class="st"> </span><span class="kw">with</span>(dt, <span class="kw">mean</span>( (Z <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m1)<span class="op">/</span>e)) <span class="op">-</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb28-6" data-line-number="6"><span class="st">  </span><span class="kw">with</span>(dt, <span class="kw">mean</span>(((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>Z) <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m0)<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>e)))</a></code></pre></div>
-<div id="refs" class="references">
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>dt &lt;-<span class="st"> </span><span class="kw">gen_data</span>(<span class="dv">1000</span>, <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">0.6</span>, <span class="fl">-0.6</span>, <span class="fl">0.6</span>), <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">-1</span>, <span class="dv">2</span>), <span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb29-2"><a href="#cb29-2"></a>geex_results &lt;-<span class="st"> </span><span class="kw">estimate_dr</span>(dt, Z <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>e  &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Z <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>),</span>
+<span id="cb30-2"><a href="#cb30-2"></a>              <span class="dt">type =</span> <span class="st">&quot;response&quot;</span>)</span>
+<span id="cb30-3"><a href="#cb30-3"></a>m0 &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">subset =</span> Z<span class="op">==</span><span class="dv">0</span>), <span class="dt">newdata =</span> dt)</span>
+<span id="cb30-4"><a href="#cb30-4"></a>m1 &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">glm</span>(Y <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2 <span class="op">+</span><span class="st"> </span>X3, <span class="dt">data =</span> dt, <span class="dt">subset =</span> Z<span class="op">==</span><span class="dv">1</span>), <span class="dt">newdata =</span> dt)</span>
+<span id="cb30-5"><a href="#cb30-5"></a>del_hat &lt;-<span class="st"> </span><span class="kw">with</span>(dt, <span class="kw">mean</span>( (Z <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m1)<span class="op">/</span>e)) <span class="op">-</span><span class="st"> </span></span>
+<span id="cb30-6"><a href="#cb30-6"></a><span class="st">  </span><span class="kw">with</span>(dt, <span class="kw">mean</span>(((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>Z) <span class="op">*</span><span class="st"> </span>Y <span class="op">-</span><span class="st"> </span>(Z <span class="op">-</span><span class="st"> </span>e) <span class="op">*</span><span class="st"> </span>m0)<span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>e)))</span></code></pre></div>
+<div id="refs" class="references hanging-indent">
 <div id="ref-lunceford2004stratification">
 <p>Lunceford, Jared K., and Marie Davidian. 2004. <em>Stratification and Weighting via the Propensity Score in Estimation of Causal Treatment Effects: A Comparative Study</em> 23.</p>
 </div>
@@ -506,6 +535,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

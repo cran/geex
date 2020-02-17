@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2018-09-23" />
+<meta name="date" content="2020-02-17" />
 
 <title>Finite sample correction API in geex</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -50,9 +49,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -83,7 +82,29 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -271,6 +292,9 @@ code > span.al { color: #ff0000; font-weight: bold; }
 code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
+
+
+
 </head>
 
 <body>
@@ -279,8 +303,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 <h1 class="title toc-ignore">Finite sample correction API in <code>geex</code></h1>
-<h4 class="author"><em>Bradley Saul</em></h4>
-<h4 class="date"><em>2018-09-23</em></h4>
+<h4 class="author">Bradley Saul</h4>
+<h4 class="date">2020-02-17</h4>
 
 
 
@@ -288,11 +312,11 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <h2>Introduction</h2>
 <p>The empirical sandwich variance estimator is known to underestimate <span class="math inline">\(V(\theta)\)</span> in small samples <span class="citation">(Fay and Graubard 2001)</span>. Particularly in the context of GEE, <a href="https://bsaul.github.io/geex/articles/articles/mestimation_bib.html">many authors</a> have proposed corrections that modify components of <span class="math inline">\(\hat{\Sigma}\)</span> and/or by assuming <span class="math inline">\(\hat{\theta}\)</span> follows a <span class="math inline">\(t\)</span> (or <span class="math inline">\(F\)</span>), as opposed to Normal, distribution with some estimated degrees of freedom. Many of the proposed corrections somehow modify a combination of the <span class="math inline">\(A_i\)</span>, <span class="math inline">\(A_m\)</span>, <span class="math inline">\(B_i\)</span>, or <span class="math inline">\(B_m\)</span> matrices.</p>
 <p><code>geex</code> provides an API that allows users to specify functions that utilize these matrices to form corrections. A finite sample correction function at a minimum takes the argument <code>components</code>, which is an object of class <code>sandwich_components</code>. For example,</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">correct_by_nothing &lt;-<span class="st"> </span><span class="cf">function</span>(components){</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">  B &lt;-<span class="st"> </span><span class="kw">grab_meat</span>(components)</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> B)</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">}</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>correct_by_nothing &lt;-<span class="st"> </span><span class="cf">function</span>(components){</span>
+<span id="cb1-2"><a href="#cb1-2"></a>  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</span>
+<span id="cb1-3"><a href="#cb1-3"></a>  B &lt;-<span class="st"> </span><span class="kw">grab_meat</span>(components)</span>
+<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> B)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>}</span></code></pre></div>
 <p>is a correctly formed function that does no corrections. Additional arguments may also be specified, as shown in the example.</p>
 </div>
 <div id="corrections-included-with-geex" class="section level2">
@@ -311,23 +335,23 @@ H_i(b) = \{1 - \min(b, \{A_i A^{-1}\}_{jj}) \}^{-1/2},
 <div id="bias-correction-example" class="section level2">
 <h2>Bias correction example</h2>
 <p>The bias corrected estimator <span class="math inline">\(\hat{\Sigma}^{bc}(b)\)</span> can be implemented in <code>geex</code> by the following function:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">bias_correction &lt;-<span class="st"> </span><span class="cf">function</span>(components, b){</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  A_i &lt;-<span class="st"> </span><span class="kw">grab_bread_list</span>(components)</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  B_i &lt;-<span class="st"> </span><span class="kw">grab_meat_list</span>(components)</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  Ainv &lt;-<span class="st"> </span><span class="kw">solve</span>(A)</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">  H_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(A_i, <span class="cf">function</span>(m){</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="kw">diag</span>( (<span class="dv">1</span> <span class="op">-</span><span class="st"> </span><span class="kw">pmin</span>(b, <span class="kw">diag</span>(m <span class="op">%*%</span><span class="st"> </span>Ainv) ) )<span class="op">^</span>(<span class="op">-</span><span class="fl">0.5</span>) )</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">  })</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">  Bbc_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">seq_along</span>(B_i), <span class="cf">function</span>(i){</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">    H_i[[i]] <span class="op">%*%</span><span class="st"> </span>B_i[[i]] <span class="op">%*%</span><span class="st"> </span>H_i[[i]]</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">  })</a>
-<a class="sourceLine" id="cb2-14" data-line-number="14">  Bbc   &lt;-<span class="st"> </span><span class="kw">apply</span>(<span class="kw">simplify2array</span>(Bbc_i), <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, sum)</a>
-<a class="sourceLine" id="cb2-15" data-line-number="15"></a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> Bbc)</a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">}</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>bias_correction &lt;-<span class="st"> </span><span class="cf">function</span>(components, b){</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  A_i &lt;-<span class="st"> </span><span class="kw">grab_bread_list</span>(components)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  B_i &lt;-<span class="st"> </span><span class="kw">grab_meat_list</span>(components)</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  Ainv &lt;-<span class="st"> </span><span class="kw">solve</span>(A)</span>
+<span id="cb2-6"><a href="#cb2-6"></a></span>
+<span id="cb2-7"><a href="#cb2-7"></a>  H_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(A_i, <span class="cf">function</span>(m){</span>
+<span id="cb2-8"><a href="#cb2-8"></a>    <span class="kw">diag</span>( (<span class="dv">1</span> <span class="op">-</span><span class="st"> </span><span class="kw">pmin</span>(b, <span class="kw">diag</span>(m <span class="op">%*%</span><span class="st"> </span>Ainv) ) )<span class="op">^</span>(<span class="op">-</span><span class="fl">0.5</span>) )</span>
+<span id="cb2-9"><a href="#cb2-9"></a>  })</span>
+<span id="cb2-10"><a href="#cb2-10"></a></span>
+<span id="cb2-11"><a href="#cb2-11"></a>  Bbc_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">seq_along</span>(B_i), <span class="cf">function</span>(i){</span>
+<span id="cb2-12"><a href="#cb2-12"></a>    H_i[[i]] <span class="op">%*%</span><span class="st"> </span>B_i[[i]] <span class="op">%*%</span><span class="st"> </span>H_i[[i]]</span>
+<span id="cb2-13"><a href="#cb2-13"></a>  })</span>
+<span id="cb2-14"><a href="#cb2-14"></a>  Bbc   &lt;-<span class="st"> </span><span class="kw">apply</span>(<span class="kw">simplify2array</span>(Bbc_i), <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, sum)</span>
+<span id="cb2-15"><a href="#cb2-15"></a></span>
+<span id="cb2-16"><a href="#cb2-16"></a>  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> Bbc)</span>
+<span id="cb2-17"><a href="#cb2-17"></a>}</span></code></pre></div>
 <p>The <code>compute_sigma</code> function simply computes <span class="math inline">\(A^{-1} B \{A^{-1}\}^{\intercal}\)</span>. Note that <code>geex</code> computes <span class="math inline">\(A_m\)</span> and <span class="math inline">\(B_m\)</span> as the sums of <span class="math inline">\(A_i\)</span> and <span class="math inline">\(B_i\)</span> rather than the means, hence the appropriate function in the <code>apply</code> call is <code>sum</code> and not <code>mean</code>. To use this bias correction, the <code>m_estimate</code> function accepts a named list of corrections to perform. Each element of the list is also a list with two elements: <code>correctFUN</code>, the correction function; and <code>correctFUN_control</code>, a list of arguments passed to the <code>correctFUN</code> besides <code>A</code>, <code>A_i</code>, <code>B</code>, and <code>B_i</code>.</p>
 </div>
 <div id="comparision-to-saws-package" class="section level2">
@@ -339,46 +363,49 @@ H_i(b) = \{1 - \min(b, \{A_i A^{-1}\}_{jj}) \}^{-1/2},
 \sum_{i= 1}^m \psi(\mathbf{Y}_i, \mathbf{X}_i, \beta) = \sum_{i = 1}^m \mathbf{D}_i^{\intercal} \mathbf{V}_i^{-1} (\mathbf{Y}_i - \mathbf{\mu}(\beta)) = 0
 \end{equation}\]</span></p>
 <p>where <span class="math inline">\(\mathbf{D}_i = \partial \mathbf{\mu}/\partial \mathbf{\beta}\)</span>. The covariance matrix is modeled by <span class="math inline">\(\mathbf{V}_i = \phi \mathbf{A}_i^{0.5} \mathbf{R}(\alpha) \mathbf{A}_i^{0.5}\)</span>. The matrix <span class="math inline">\(\mathbf{R}(\alpha)\)</span> is the “working” correlation matrix, which in this example is an exchangeable matrix with off diagonal elements <span class="math inline">\(\alpha\)</span>. The matrix <span class="math inline">\(\mathbf{A}_i\)</span> is a diagonal matrix with elements containing the variance functions of <span class="math inline">\(\mu\)</span>. The equations in  can be translated into an <code>eeFUN</code> as:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">gee_eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, formula, family){</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(<span class="dt">object =</span> formula, <span class="dt">data =</span> data)</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  Y &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(<span class="dt">formula =</span> formula, <span class="dt">data =</span> data))</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  n &lt;-<span class="st"> </span><span class="kw">nrow</span>(X)</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">  <span class="cf">function</span>(theta, alpha, psi){</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">    mu  &lt;-<span class="st"> </span>family<span class="op">$</span><span class="kw">linkinv</span>(X <span class="op">%*%</span><span class="st"> </span>theta)</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">    Dt  &lt;-<span class="st"> </span><span class="kw">t</span>(X) <span class="op">%*%</span><span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(mu), <span class="dt">nrow =</span> n)</a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">    A   &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(family<span class="op">$</span><span class="kw">variance</span>(mu)), <span class="dt">nrow =</span> n)</a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    R   &lt;-<span class="st"> </span><span class="kw">matrix</span>(alpha, <span class="dt">nrow =</span> n, <span class="dt">ncol =</span> n)</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    <span class="kw">diag</span>(R) &lt;-<span class="st"> </span><span class="dv">1</span></a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">    V   &lt;-<span class="st"> </span>psi <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(A) <span class="op">%*%</span><span class="st"> </span>R <span class="op">%*%</span><span class="st"> </span><span class="kw">sqrt</span>(A))</a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">    Dt <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(V) <span class="op">%*%</span><span class="st"> </span>(Y <span class="op">-</span><span class="st"> </span>mu)</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">  }</a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">}</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>gee_eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, formula, family){</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(<span class="dt">object =</span> formula, <span class="dt">data =</span> data)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>  Y &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(<span class="dt">formula =</span> formula, <span class="dt">data =</span> data))</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  n &lt;-<span class="st"> </span><span class="kw">nrow</span>(X)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>  <span class="cf">function</span>(theta, alpha, psi){</span>
+<span id="cb3-6"><a href="#cb3-6"></a>    mu  &lt;-<span class="st"> </span>family<span class="op">$</span><span class="kw">linkinv</span>(X <span class="op">%*%</span><span class="st"> </span>theta)</span>
+<span id="cb3-7"><a href="#cb3-7"></a>    Dt  &lt;-<span class="st"> </span><span class="kw">t</span>(X) <span class="op">%*%</span><span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(mu), <span class="dt">nrow =</span> n)</span>
+<span id="cb3-8"><a href="#cb3-8"></a>    A   &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(family<span class="op">$</span><span class="kw">variance</span>(mu)), <span class="dt">nrow =</span> n)</span>
+<span id="cb3-9"><a href="#cb3-9"></a>    R   &lt;-<span class="st"> </span><span class="kw">matrix</span>(alpha, <span class="dt">nrow =</span> n, <span class="dt">ncol =</span> n)</span>
+<span id="cb3-10"><a href="#cb3-10"></a>    <span class="kw">diag</span>(R) &lt;-<span class="st"> </span><span class="dv">1</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a>    V   &lt;-<span class="st"> </span>psi <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(A) <span class="op">%*%</span><span class="st"> </span>R <span class="op">%*%</span><span class="st"> </span><span class="kw">sqrt</span>(A))</span>
+<span id="cb3-12"><a href="#cb3-12"></a>    Dt <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(V) <span class="op">%*%</span><span class="st"> </span>(Y <span class="op">-</span><span class="st"> </span>mu)</span>
+<span id="cb3-13"><a href="#cb3-13"></a>  }</span>
+<span id="cb3-14"><a href="#cb3-14"></a>}</span></code></pre></div>
 <p>This <code>eeFUN</code> treats the correlation parameter <span class="math inline">\(\alpha\)</span> and scale parameter <span class="math inline">\(\phi\)</span> as fixed, though some estimation algorithms use an iterative procedure that alternates between estimating <span class="math inline">\(\beta\)</span> and these parameters. By customizing the root finding function, such an algorithm could be implemented using <code>geex</code> [see <code>vignette(&quot;geex_root_solvers&quot;)</code> for more information].</p>
 <p>We use this example to compare covariance estimates obtained from the <code>gee</code> function, so root finding computations are turned off. The <code>gee</code> <span class="math inline">\(\beta\)</span> estimates are used instead. Estimates for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\phi\)</span> are also extracted from the <code>gee</code> results in <code>m_estimate</code>. This example shows that an <code>eeFUN</code> can accept additional arguments to be passed to either the outer (data) function or the inner (theta) function. Unlike previous examples, the independent units are the types of wool, which is set in <code>m_estimate</code> by the <code>units</code> argument.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">g &lt;-<span class="st"> </span>gee<span class="op">::</span><span class="kw">gee</span>(breaks<span class="op">~</span>tension, <span class="dt">id=</span>wool, <span class="dt">data=</span>warpbreaks, <span class="dt">corstr=</span><span class="st">&quot;exchangeable&quot;</span>)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">guo &lt;-<span class="st"> </span>saws<span class="op">::</span><span class="kw">geeUOmega</span>(g)</a></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">library</span>(geex)</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="dt">estFUN =</span> gee_eefun, <span class="dt">data  =</span> warpbreaks, </a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">  <span class="dt">units =</span> <span class="st">'wool'</span>, <span class="dt">roots =</span> <span class="kw">coef</span>(g), <span class="dt">compute_roots =</span> <span class="ot">FALSE</span>,</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">formula =</span> breaks <span class="op">~</span><span class="st"> </span>tension, </a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">                      <span class="dt">family  =</span> <span class="kw">gaussian</span>()),</a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">  <span class="dt">inner_args =</span> <span class="kw">list</span>(<span class="dt">alpha   =</span> g<span class="op">$</span>working.correlation[<span class="dv">1</span>,<span class="dv">2</span>], </a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">                      <span class="dt">psi     =</span> g<span class="op">$</span>scale), </a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="dt">corrections =</span> <span class="kw">list</span>(</a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">   <span class="dt">bias_correction_.1 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.1</span>),</a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">   <span class="dt">bias_correction_.3 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.3</span>))) </a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>g &lt;-<span class="st"> </span>gee<span class="op">::</span><span class="kw">gee</span>(breaks<span class="op">~</span>tension, <span class="dt">id=</span>wool, <span class="dt">data=</span>warpbreaks, <span class="dt">corstr=</span><span class="st">&quot;exchangeable&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>guo &lt;-<span class="st"> </span>saws<span class="op">::</span><span class="kw">geeUOmega</span>(g)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">library</span>(geex)</span>
+<span id="cb5-2"><a href="#cb5-2"></a>results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb5-3"><a href="#cb5-3"></a>  <span class="dt">estFUN =</span> gee_eefun, <span class="dt">data  =</span> warpbreaks, </span>
+<span id="cb5-4"><a href="#cb5-4"></a>  <span class="dt">units =</span> <span class="st">&#39;wool&#39;</span>, <span class="dt">roots =</span> <span class="kw">coef</span>(g), <span class="dt">compute_roots =</span> <span class="ot">FALSE</span>,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">formula =</span> breaks <span class="op">~</span><span class="st"> </span>tension, </span>
+<span id="cb5-6"><a href="#cb5-6"></a>                      <span class="dt">family  =</span> <span class="kw">gaussian</span>()),</span>
+<span id="cb5-7"><a href="#cb5-7"></a>  <span class="dt">inner_args =</span> <span class="kw">list</span>(<span class="dt">alpha   =</span> g<span class="op">$</span>working.correlation[<span class="dv">1</span>,<span class="dv">2</span>], </span>
+<span id="cb5-8"><a href="#cb5-8"></a>                      <span class="dt">psi     =</span> g<span class="op">$</span>scale), </span>
+<span id="cb5-9"><a href="#cb5-9"></a>  <span class="dt">corrections =</span> <span class="kw">list</span>(</span>
+<span id="cb5-10"><a href="#cb5-10"></a>   <span class="dt">bias_correction_.1 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.1</span>),</span>
+<span id="cb5-11"><a href="#cb5-11"></a>   <span class="dt">bias_correction_.3 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.3</span>))) </span></code></pre></div>
 <p>In the <code>geex</code> output, the item <code>corrections</code> contains a list of the results of computing each item in the <code>corrections_list</code>. Comparing the <code>geex</code> results to the results of the <code>saws::geeUOmega</code> function, the maximum difference in the results for any of corrected estimated covariance matrices is 1.1e-09.</p>
 </div>
 <div id="references" class="section level2 unnumbered">
-<h2>References</h2>
-<div id="refs" class="references">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references hanging-indent">
 <div id="ref-fay2001">
 <p>Fay, Michael P., and Barry I. Graubard. 2001. <em>Small-Sample Adjustments for Wald-Type Tests Using Sandwich Estimators</em> 57.</p>
 </div>
 </div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

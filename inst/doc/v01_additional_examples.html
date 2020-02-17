@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2018-09-23" />
+<meta name="date" content="2020-02-17" />
 
 <title>Additional calculus of M-estimation examples using geex</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -50,9 +49,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -83,7 +82,29 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -271,6 +292,9 @@ code > span.al { color: #ff0000; font-weight: bold; }
 code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
+
+
+
 </head>
 
 <body>
@@ -279,15 +303,15 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 <h1 class="title toc-ignore">Additional calculus of M-estimation examples using <code>geex</code></h1>
-<h4 class="author"><em>Bradley Saul</em></h4>
-<h4 class="date"><em>2018-09-23</em></h4>
+<h4 class="author">Bradley Saul</h4>
+<h4 class="date">2020-02-17</h4>
 
 
 
 <div id="preliminaries" class="section level2">
 <h2>Preliminaries</h2>
-<p>This vignette implements examples from and is meant to read with <span class="citation">Stefanski and Boos (2002)</span> (SB). Examples 4-9 use the <code>geexex</code> data set. For information on how the data are generated, run <code>help('geexex')</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(geex)</a></code></pre></div>
+<p>This vignette implements examples from and is meant to read with <span class="citation">Stefanski and Boos (2002)</span> (SB). Examples 4-9 use the <code>geexex</code> data set. For information on how the data are generated, run <code>help(&#39;geexex&#39;)</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(geex)</span></code></pre></div>
 </div>
 <div id="the-basic-approach" class="section level2">
 <h2>The Basic Approach</h2>
@@ -314,31 +338,31 @@ Z_{1i} = \gamma + \delta X_{1i} + \sigma_{\tau}\epsilon_{3, i}.
 (Y_{3i} - \theta_4 W_{1i})(\theta_1 - Z_{1i}) \\
 \end{pmatrix}
 \]</span></p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">SB4_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">  Z1 &lt;-<span class="st"> </span>data<span class="op">$</span>Z1; W1 &lt;-<span class="st"> </span>data<span class="op">$</span>W1; Y3 &lt;-<span class="st"> </span>data<span class="op">$</span>Y3</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">      <span class="kw">c</span>(theta[<span class="dv">1</span>] <span class="op">-</span><span class="st"> </span>Z1,</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">        theta[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>W1,</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">        (Y3 <span class="op">-</span><span class="st"> </span>(theta[<span class="dv">3</span>] <span class="op">*</span><span class="st"> </span>W1)) <span class="op">*</span><span class="st"> </span>(theta[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>W1),</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">        (Y3 <span class="op">-</span><span class="st"> </span>(theta[<span class="dv">4</span>] <span class="op">*</span><span class="st"> </span>W1)) <span class="op">*</span><span class="st"> </span>(theta[<span class="dv">1</span>] <span class="op">-</span><span class="st"> </span>Z1)</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">    )</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">  }</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">}</a></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="dt">estFUN =</span> SB4_estFUN, </a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="dt">data  =</span> geexex, </a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)))</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>SB4_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  Z1 &lt;-<span class="st"> </span>data<span class="op">$</span>Z1; W1 &lt;-<span class="st"> </span>data<span class="op">$</span>W1; Y3 &lt;-<span class="st"> </span>data<span class="op">$</span>Y3</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb2-4"><a href="#cb2-4"></a>      <span class="kw">c</span>(theta[<span class="dv">1</span>] <span class="op">-</span><span class="st"> </span>Z1,</span>
+<span id="cb2-5"><a href="#cb2-5"></a>        theta[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>W1,</span>
+<span id="cb2-6"><a href="#cb2-6"></a>        (Y3 <span class="op">-</span><span class="st"> </span>(theta[<span class="dv">3</span>] <span class="op">*</span><span class="st"> </span>W1)) <span class="op">*</span><span class="st"> </span>(theta[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>W1),</span>
+<span id="cb2-7"><a href="#cb2-7"></a>        (Y3 <span class="op">-</span><span class="st"> </span>(theta[<span class="dv">4</span>] <span class="op">*</span><span class="st"> </span>W1)) <span class="op">*</span><span class="st"> </span>(theta[<span class="dv">1</span>] <span class="op">-</span><span class="st"> </span>Z1)</span>
+<span id="cb2-8"><a href="#cb2-8"></a>    )</span>
+<span id="cb2-9"><a href="#cb2-9"></a>  }</span>
+<span id="cb2-10"><a href="#cb2-10"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="dt">estFUN =</span> SB4_estFUN, </span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="dt">data  =</span> geexex, </span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)))</span></code></pre></div>
 <p>The R packages <a href="https://cran.r-project.org/package=AER"><code>AER</code></a> and <a href="https://cran.r-project.org/package=ivpack"><code>ivpack</code></a> can compute the IV estimator and sandwich variance estimators respectively, which is done below for comparison.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">ivfit &lt;-<span class="st"> </span>AER<span class="op">::</span><span class="kw">ivreg</span>(Y3 <span class="op">~</span><span class="st"> </span>W1 <span class="op">|</span><span class="st"> </span>Z1, <span class="dt">data =</span> geexex)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">iv_se &lt;-<span class="st"> </span>ivpack<span class="op">::</span><span class="kw">cluster.robust.se</span>(ivfit, <span class="dt">clusterid =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(geexex))</a></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">coef</span>(ivfit)[<span class="dv">2</span>] </a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>ivfit &lt;-<span class="st"> </span>AER<span class="op">::</span><span class="kw">ivreg</span>(Y3 <span class="op">~</span><span class="st"> </span>W1 <span class="op">|</span><span class="st"> </span>Z1, <span class="dt">data =</span> geexex)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>iv_se &lt;-<span class="st"> </span>ivpack<span class="op">::</span><span class="kw">cluster.robust.se</span>(ivfit, <span class="dt">clusterid =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(geexex))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">coef</span>(ivfit)[<span class="dv">2</span>] </span></code></pre></div>
 <pre><code>##       W1 
 ## 3.041264</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">coef</span>(estimates)[<span class="dv">4</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">coef</span>(estimates)[<span class="dv">4</span>]</span></code></pre></div>
 <pre><code>## [1] 3.041264</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">iv_se[<span class="dv">2</span>, <span class="st">'Std. Error'</span>] </a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>iv_se[<span class="dv">2</span>, <span class="st">&#39;Std. Error&#39;</span>] </span></code></pre></div>
 <pre><code>## [1] 0.01049669</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">sqrt</span>(<span class="kw">vcov</span>(estimates)[<span class="dv">4</span>, <span class="dv">4</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">sqrt</span>(<span class="kw">vcov</span>(estimates)[<span class="dv">4</span>, <span class="dv">4</span>])</span></code></pre></div>
 <pre><code>## [1] 0.01039119</code></pre>
 </div>
 </div>
@@ -354,33 +378,33 @@ IC_{\hat{\theta}_{HL}}(Y_2; \theta_0) - (\theta_1 - \theta_0) \\
 \end{pmatrix}
 \]</span></p>
 <p>The functions used in <code>SB5_estFUN</code> are defined below:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">F0 &lt;-<span class="st"> </span><span class="cf">function</span>(y, theta0, <span class="dt">distrFUN =</span> pnorm){</a>
-<a class="sourceLine" id="cb13-2" data-line-number="2">  <span class="kw">distrFUN</span>(y <span class="op">-</span><span class="st"> </span>theta0, <span class="dt">mean =</span> <span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb13-3" data-line-number="3">}</a>
-<a class="sourceLine" id="cb13-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb13-5" data-line-number="5">f0 &lt;-<span class="st"> </span><span class="cf">function</span>(y, densFUN){</a>
-<a class="sourceLine" id="cb13-6" data-line-number="6">  <span class="kw">densFUN</span>(y, <span class="dt">mean =</span> <span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb13-7" data-line-number="7">}</a>
-<a class="sourceLine" id="cb13-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb13-9" data-line-number="9">integrand &lt;-<span class="st"> </span><span class="cf">function</span>(y, <span class="dt">densFUN =</span> dnorm){</a>
-<a class="sourceLine" id="cb13-10" data-line-number="10">  <span class="kw">f0</span>(y, <span class="dt">densFUN =</span> densFUN)<span class="op">^</span><span class="dv">2</span></a>
-<a class="sourceLine" id="cb13-11" data-line-number="11">}</a>
-<a class="sourceLine" id="cb13-12" data-line-number="12"></a>
-<a class="sourceLine" id="cb13-13" data-line-number="13">IC_denom &lt;-<span class="st"> </span><span class="kw">integrate</span>(integrand, <span class="dt">lower =</span> <span class="op">-</span><span class="ot">Inf</span>, <span class="dt">upper =</span> <span class="ot">Inf</span>)<span class="op">$</span>value</a></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">SB5_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb14-2" data-line-number="2">  Yi &lt;-<span class="st"> </span>data[[<span class="st">'Y2'</span>]]</a>
-<a class="sourceLine" id="cb14-3" data-line-number="3">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb14-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb14-5" data-line-number="5">     (<span class="dv">1</span><span class="op">/</span>IC_denom) <span class="op">*</span><span class="st"> </span>(<span class="kw">F0</span>(Yi, theta[<span class="dv">1</span>]) <span class="op">-</span><span class="st"> </span><span class="fl">0.5</span>)</a>
-<a class="sourceLine" id="cb14-6" data-line-number="6">  }</a>
-<a class="sourceLine" id="cb14-7" data-line-number="7">}</a></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb15-2" data-line-number="2">  <span class="dt">estFUN =</span> SB5_estFUN, </a>
-<a class="sourceLine" id="cb15-3" data-line-number="3">  <span class="dt">data  =</span> geexex,</a>
-<a class="sourceLine" id="cb15-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">2</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>F0 &lt;-<span class="st"> </span><span class="cf">function</span>(y, theta0, <span class="dt">distrFUN =</span> pnorm){</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="kw">distrFUN</span>(y <span class="op">-</span><span class="st"> </span>theta0, <span class="dt">mean =</span> <span class="dv">0</span>)</span>
+<span id="cb13-3"><a href="#cb13-3"></a>}</span>
+<span id="cb13-4"><a href="#cb13-4"></a></span>
+<span id="cb13-5"><a href="#cb13-5"></a>f0 &lt;-<span class="st"> </span><span class="cf">function</span>(y, densFUN){</span>
+<span id="cb13-6"><a href="#cb13-6"></a>  <span class="kw">densFUN</span>(y, <span class="dt">mean =</span> <span class="dv">0</span>)</span>
+<span id="cb13-7"><a href="#cb13-7"></a>}</span>
+<span id="cb13-8"><a href="#cb13-8"></a></span>
+<span id="cb13-9"><a href="#cb13-9"></a>integrand &lt;-<span class="st"> </span><span class="cf">function</span>(y, <span class="dt">densFUN =</span> dnorm){</span>
+<span id="cb13-10"><a href="#cb13-10"></a>  <span class="kw">f0</span>(y, <span class="dt">densFUN =</span> densFUN)<span class="op">^</span><span class="dv">2</span></span>
+<span id="cb13-11"><a href="#cb13-11"></a>}</span>
+<span id="cb13-12"><a href="#cb13-12"></a></span>
+<span id="cb13-13"><a href="#cb13-13"></a>IC_denom &lt;-<span class="st"> </span><span class="kw">integrate</span>(integrand, <span class="dt">lower =</span> <span class="op">-</span><span class="ot">Inf</span>, <span class="dt">upper =</span> <span class="ot">Inf</span>)<span class="op">$</span>value</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>SB5_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  Yi &lt;-<span class="st"> </span>data[[<span class="st">&#39;Y2&#39;</span>]]</span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb14-4"><a href="#cb14-4"></a></span>
+<span id="cb14-5"><a href="#cb14-5"></a>     (<span class="dv">1</span><span class="op">/</span>IC_denom) <span class="op">*</span><span class="st"> </span>(<span class="kw">F0</span>(Yi, theta[<span class="dv">1</span>]) <span class="op">-</span><span class="st"> </span><span class="fl">0.5</span>)</span>
+<span id="cb14-6"><a href="#cb14-6"></a>  }</span>
+<span id="cb14-7"><a href="#cb14-7"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="dt">estFUN =</span> SB5_estFUN, </span>
+<span id="cb15-3"><a href="#cb15-3"></a>  <span class="dt">data  =</span> geexex,</span>
+<span id="cb15-4"><a href="#cb15-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">2</span>))</span></code></pre></div>
 <p>The <code>hc.loc</code> of the <a href="https://cran.r-project.org/package=ICSNP"><code>ICSNP</code></a> package computes the Hodges-Lehman estimator and SB gave closed form estimators for the variance.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">theta_cls &lt;-<span class="st"> </span>ICSNP<span class="op">::</span><span class="kw">hl.loc</span>(geexex<span class="op">$</span>Y2)</a>
-<a class="sourceLine" id="cb16-2" data-line-number="2">Sigma_cls &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">12</span> <span class="op">*</span><span class="st"> </span>IC_denom<span class="op">^</span><span class="dv">2</span>) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(geexex)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>theta_cls &lt;-<span class="st"> </span>ICSNP<span class="op">::</span><span class="kw">hl.loc</span>(geexex<span class="op">$</span>Y2)</span>
+<span id="cb16-2"><a href="#cb16-2"></a>Sigma_cls &lt;-<span class="st"> </span><span class="dv">1</span><span class="op">/</span>(<span class="dv">12</span> <span class="op">*</span><span class="st"> </span>IC_denom<span class="op">^</span><span class="dv">2</span>) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(geexex)</span></code></pre></div>
 <pre><code>## $geex
 ## $geex$parameters
 ## [1] 2.026376
@@ -410,39 +434,39 @@ IC_{\hat{\theta}_{HL}}(Y_2; \theta_0) - (\theta_1 - \theta_0) \\
 k * sgn(Y_{1i} - \theta) &amp;  \text{when } |(Y_{1i} - \theta)| &gt; k\\
 \end{cases}
 \]</span></p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1">SB6_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data, <span class="dt">k =</span> <span class="fl">1.5</span>){</a>
-<a class="sourceLine" id="cb18-2" data-line-number="2">  Y1 &lt;-<span class="st"> </span>data<span class="op">$</span>Y1</a>
-<a class="sourceLine" id="cb18-3" data-line-number="3">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb18-4" data-line-number="4">    x &lt;-<span class="st"> </span>Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb18-5" data-line-number="5">    <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</a>
-<a class="sourceLine" id="cb18-6" data-line-number="6">  }</a>
-<a class="sourceLine" id="cb18-7" data-line-number="7">}</a></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb19-2" data-line-number="2">  <span class="dt">estFUN =</span> SB6_estFUN, </a>
-<a class="sourceLine" id="cb19-3" data-line-number="3">  <span class="dt">data  =</span> geexex,</a>
-<a class="sourceLine" id="cb19-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">3</span>))</a></code></pre></div>
-<p>The point estimate from <code>geex</code> is compared to the estimate obtained from the <code>huber</code> function in the <a href="https://cran.r-project.org/package=MASS"><code>MASS</code></a> package. The variance estimate is compared to an estimator suggested by SB: <span class="math inline">\(A_m = \sum_i [-\psi'(Y_i - \hat{\theta})]/m\)</span> and <span class="math inline">\(B_m = \sum_i \psi_k^2(Y_i - \hat{\theta})/m\)</span>, where <span class="math inline">\(\psi_k'\)</span> is the derivative of <span class="math inline">\(\psi\)</span> where is exists.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1">theta_cls &lt;-<span class="st"> </span>MASS<span class="op">::</span><span class="kw">huber</span>(geexex<span class="op">$</span>Y1, <span class="dt">k =</span> <span class="fl">1.5</span>, <span class="dt">tol =</span> <span class="fl">1e-10</span>)<span class="op">$</span>mu</a>
-<a class="sourceLine" id="cb20-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb20-3" data-line-number="3">psi_k &lt;-<span class="st"> </span><span class="cf">function</span>(x, <span class="dt">k =</span> <span class="fl">1.5</span>){</a>
-<a class="sourceLine" id="cb20-4" data-line-number="4">  <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</a>
-<a class="sourceLine" id="cb20-5" data-line-number="5">}</a>
-<a class="sourceLine" id="cb20-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb20-7" data-line-number="7">A &lt;-<span class="st"> </span><span class="kw">mean</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(geexex<span class="op">$</span>Y1, <span class="cf">function</span>(y){</a>
-<a class="sourceLine" id="cb20-8" data-line-number="8">  x &lt;-<span class="st"> </span>y <span class="op">-</span><span class="st"> </span>theta_cls</a>
-<a class="sourceLine" id="cb20-9" data-line-number="9">  <span class="op">-</span>numDeriv<span class="op">::</span><span class="kw">grad</span>(psi_k, <span class="dt">x =</span> x)</a>
-<a class="sourceLine" id="cb20-10" data-line-number="10">})))</a>
-<a class="sourceLine" id="cb20-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb20-12" data-line-number="12">B &lt;-<span class="st"> </span><span class="kw">mean</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(geexex<span class="op">$</span>Y1, <span class="cf">function</span>(y){</a>
-<a class="sourceLine" id="cb20-13" data-line-number="13">  x &lt;-<span class="st"> </span>y <span class="op">-</span><span class="st"> </span>theta_cls</a>
-<a class="sourceLine" id="cb20-14" data-line-number="14">  <span class="kw">psi_k</span>(<span class="dt">x =</span> x)<span class="op">^</span><span class="dv">2</span></a>
-<a class="sourceLine" id="cb20-15" data-line-number="15">})))</a>
-<a class="sourceLine" id="cb20-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb20-17" data-line-number="17">## closed form covariance</a>
-<a class="sourceLine" id="cb20-18" data-line-number="18">Sigma_cls &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">/</span>A <span class="op">*</span><span class="st"> </span>B <span class="op">*</span><span class="st"> </span><span class="dv">1</span><span class="op">/</span>A <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(geexex))</a></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1">results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)), </a>
-<a class="sourceLine" id="cb21-2" data-line-number="2">                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</a>
-<a class="sourceLine" id="cb21-3" data-line-number="3">results</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>SB6_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data, <span class="dt">k =</span> <span class="fl">1.5</span>){</span>
+<span id="cb18-2"><a href="#cb18-2"></a>  Y1 &lt;-<span class="st"> </span>data<span class="op">$</span>Y1</span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb18-4"><a href="#cb18-4"></a>    x &lt;-<span class="st"> </span>Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>]</span>
+<span id="cb18-5"><a href="#cb18-5"></a>    <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</span>
+<span id="cb18-6"><a href="#cb18-6"></a>  }</span>
+<span id="cb18-7"><a href="#cb18-7"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb19-2"><a href="#cb19-2"></a>  <span class="dt">estFUN =</span> SB6_estFUN, </span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="dt">data  =</span> geexex,</span>
+<span id="cb19-4"><a href="#cb19-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">3</span>))</span></code></pre></div>
+<p>The point estimate from <code>geex</code> is compared to the estimate obtained from the <code>huber</code> function in the <a href="https://cran.r-project.org/package=MASS"><code>MASS</code></a> package. The variance estimate is compared to an estimator suggested by SB: <span class="math inline">\(A_m = \sum_i [-\psi&#39;(Y_i - \hat{\theta})]/m\)</span> and <span class="math inline">\(B_m = \sum_i \psi_k^2(Y_i - \hat{\theta})/m\)</span>, where <span class="math inline">\(\psi_k&#39;\)</span> is the derivative of <span class="math inline">\(\psi\)</span> where is exists.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>theta_cls &lt;-<span class="st"> </span>MASS<span class="op">::</span><span class="kw">huber</span>(geexex<span class="op">$</span>Y1, <span class="dt">k =</span> <span class="fl">1.5</span>, <span class="dt">tol =</span> <span class="fl">1e-10</span>)<span class="op">$</span>mu</span>
+<span id="cb20-2"><a href="#cb20-2"></a></span>
+<span id="cb20-3"><a href="#cb20-3"></a>psi_k &lt;-<span class="st"> </span><span class="cf">function</span>(x, <span class="dt">k =</span> <span class="fl">1.5</span>){</span>
+<span id="cb20-4"><a href="#cb20-4"></a>  <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</span>
+<span id="cb20-5"><a href="#cb20-5"></a>}</span>
+<span id="cb20-6"><a href="#cb20-6"></a></span>
+<span id="cb20-7"><a href="#cb20-7"></a>A &lt;-<span class="st"> </span><span class="kw">mean</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(geexex<span class="op">$</span>Y1, <span class="cf">function</span>(y){</span>
+<span id="cb20-8"><a href="#cb20-8"></a>  x &lt;-<span class="st"> </span>y <span class="op">-</span><span class="st"> </span>theta_cls</span>
+<span id="cb20-9"><a href="#cb20-9"></a>  <span class="op">-</span>numDeriv<span class="op">::</span><span class="kw">grad</span>(psi_k, <span class="dt">x =</span> x)</span>
+<span id="cb20-10"><a href="#cb20-10"></a>})))</span>
+<span id="cb20-11"><a href="#cb20-11"></a></span>
+<span id="cb20-12"><a href="#cb20-12"></a>B &lt;-<span class="st"> </span><span class="kw">mean</span>(<span class="kw">unlist</span>(<span class="kw">lapply</span>(geexex<span class="op">$</span>Y1, <span class="cf">function</span>(y){</span>
+<span id="cb20-13"><a href="#cb20-13"></a>  x &lt;-<span class="st"> </span>y <span class="op">-</span><span class="st"> </span>theta_cls</span>
+<span id="cb20-14"><a href="#cb20-14"></a>  <span class="kw">psi_k</span>(<span class="dt">x =</span> x)<span class="op">^</span><span class="dv">2</span></span>
+<span id="cb20-15"><a href="#cb20-15"></a>})))</span>
+<span id="cb20-16"><a href="#cb20-16"></a></span>
+<span id="cb20-17"><a href="#cb20-17"></a><span class="co">## closed form covariance</span></span>
+<span id="cb20-18"><a href="#cb20-18"></a>Sigma_cls &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">/</span>A <span class="op">*</span><span class="st"> </span>B <span class="op">*</span><span class="st"> </span><span class="dv">1</span><span class="op">/</span>A <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(geexex))</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)), </span>
+<span id="cb21-2"><a href="#cb21-2"></a>                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</span>
+<span id="cb21-3"><a href="#cb21-3"></a>results</span></code></pre></div>
 <pre><code>## $geex
 ## $geex$parameters
 ## [1] 4.82061
@@ -470,24 +494,24 @@ k * sgn(Y_{1i} - \theta) &amp;  \text{when } |(Y_{1i} - \theta)| &gt; k\\
 0.5 - I(Y_{1i} \leq \theta_1) \\
 \end{pmatrix}
 \]</span></p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1">SB7_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb23-2" data-line-number="2">  Y1 &lt;-<span class="st"> </span>data<span class="op">$</span>Y1</a>
-<a class="sourceLine" id="cb23-3" data-line-number="3">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb23-4" data-line-number="4">    <span class="fl">0.5</span>  <span class="op">-</span><span class="st"> </span>(Y1 <span class="op">&lt;=</span><span class="st"> </span>theta[<span class="dv">1</span>])</a>
-<a class="sourceLine" id="cb23-5" data-line-number="5">  }</a>
-<a class="sourceLine" id="cb23-6" data-line-number="6">}</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>SB7_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb23-2"><a href="#cb23-2"></a>  Y1 &lt;-<span class="st"> </span>data<span class="op">$</span>Y1</span>
+<span id="cb23-3"><a href="#cb23-3"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb23-4"><a href="#cb23-4"></a>    <span class="fl">0.5</span>  <span class="op">-</span><span class="st"> </span>(Y1 <span class="op">&lt;=</span><span class="st"> </span>theta[<span class="dv">1</span>])</span>
+<span id="cb23-5"><a href="#cb23-5"></a>  }</span>
+<span id="cb23-6"><a href="#cb23-6"></a>}</span></code></pre></div>
 <p>Note that <span class="math inline">\(\psi\)</span> is not differentiable; however, <code>geex</code> includes the ability to approximate the <span class="math inline">\(\psi\)</span> function via an <code>approx_control</code> object. The <code>FUN</code> in an <code>approx_control</code> must be a function that takes in the <span class="math inline">\(\psi\)</span> function, modifies it, and returns a function of <code>theta</code>. For this example, I approximate <span class="math inline">\(\psi\)</span> with a spline function. The <code>eval_theta</code> argument is used to modify the basis of the spline.</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">spline_approx &lt;-<span class="st"> </span><span class="cf">function</span>(psi, eval_theta){</a>
-<a class="sourceLine" id="cb24-2" data-line-number="2">  y &lt;-<span class="st"> </span><span class="kw">Vectorize</span>(psi)(eval_theta)</a>
-<a class="sourceLine" id="cb24-3" data-line-number="3">  f &lt;-<span class="st"> </span><span class="kw">splinefun</span>(<span class="dt">x =</span> eval_theta, <span class="dt">y =</span> y)</a>
-<a class="sourceLine" id="cb24-4" data-line-number="4">  <span class="cf">function</span>(theta) <span class="kw">f</span>(theta)</a>
-<a class="sourceLine" id="cb24-5" data-line-number="5">}</a></code></pre></div>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb25-2" data-line-number="2">  <span class="dt">estFUN =</span> SB7_estFUN, </a>
-<a class="sourceLine" id="cb25-3" data-line-number="3">  <span class="dt">data  =</span> geexex, </a>
-<a class="sourceLine" id="cb25-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="fl">4.7</span>),</a>
-<a class="sourceLine" id="cb25-5" data-line-number="5">  <span class="dt">approx_control  =</span> <span class="kw">setup_approx_control</span>(<span class="dt">FUN =</span> spline_approx,</a>
-<a class="sourceLine" id="cb25-6" data-line-number="6">                                      <span class="dt">eval_theta =</span> <span class="kw">seq</span>(<span class="dv">3</span>, <span class="dv">6</span>, <span class="dt">by =</span> <span class="fl">.05</span>)))</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>spline_approx &lt;-<span class="st"> </span><span class="cf">function</span>(psi, eval_theta){</span>
+<span id="cb24-2"><a href="#cb24-2"></a>  y &lt;-<span class="st"> </span><span class="kw">Vectorize</span>(psi)(eval_theta)</span>
+<span id="cb24-3"><a href="#cb24-3"></a>  f &lt;-<span class="st"> </span><span class="kw">splinefun</span>(<span class="dt">x =</span> eval_theta, <span class="dt">y =</span> y)</span>
+<span id="cb24-4"><a href="#cb24-4"></a>  <span class="cf">function</span>(theta) <span class="kw">f</span>(theta)</span>
+<span id="cb24-5"><a href="#cb24-5"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb25-2"><a href="#cb25-2"></a>  <span class="dt">estFUN =</span> SB7_estFUN, </span>
+<span id="cb25-3"><a href="#cb25-3"></a>  <span class="dt">data  =</span> geexex, </span>
+<span id="cb25-4"><a href="#cb25-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="fl">4.7</span>),</span>
+<span id="cb25-5"><a href="#cb25-5"></a>  <span class="dt">approx_control  =</span> <span class="kw">setup_approx_control</span>(<span class="dt">FUN =</span> spline_approx,</span>
+<span id="cb25-6"><a href="#cb25-6"></a>                                      <span class="dt">eval_theta =</span> <span class="kw">seq</span>(<span class="dv">3</span>, <span class="dv">6</span>, <span class="dt">by =</span> <span class="fl">.05</span>)))</span></code></pre></div>
 <p>A comparison of the variance is not obvious, so no comparison is made.</p>
 <pre><code>## $geex
 ## $geex$parameters
@@ -517,28 +541,28 @@ k * sgn(Y_{1i} - \theta) &amp;  \text{when } |(Y_{1i} - \theta)| &gt; k\\
 \psi_k(Y_{4i} - \mathbf{x}_i^T \beta) \mathbf{x}_i
 \end{pmatrix}
 \]</span></p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">psi_k &lt;-<span class="st"> </span><span class="cf">function</span>(x, <span class="dt">k =</span> <span class="fl">1.345</span>){</a>
-<a class="sourceLine" id="cb27-2" data-line-number="2">  <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</a>
-<a class="sourceLine" id="cb27-3" data-line-number="3">}</a>
-<a class="sourceLine" id="cb27-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb27-5" data-line-number="5">SB8_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb27-6" data-line-number="6">  Yi &lt;-<span class="st"> </span>data<span class="op">$</span>Y4</a>
-<a class="sourceLine" id="cb27-7" data-line-number="7">  xi &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(Y4 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> data)</a>
-<a class="sourceLine" id="cb27-8" data-line-number="8">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb27-9" data-line-number="9">    r &lt;-<span class="st"> </span>Yi <span class="op">-</span><span class="st"> </span>xi <span class="op">%*%</span><span class="st"> </span>theta</a>
-<a class="sourceLine" id="cb27-10" data-line-number="10">    <span class="kw">c</span>(<span class="kw">psi_k</span>(r) <span class="op">%*%</span><span class="st"> </span>xi)</a>
-<a class="sourceLine" id="cb27-11" data-line-number="11">  }</a>
-<a class="sourceLine" id="cb27-12" data-line-number="12">}</a></code></pre></div>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb28-2" data-line-number="2">  <span class="dt">estFUN =</span> SB8_estFUN, </a>
-<a class="sourceLine" id="cb28-3" data-line-number="3">  <span class="dt">data  =</span> geexex,</a>
-<a class="sourceLine" id="cb28-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)))</a></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1">m &lt;-<span class="st"> </span>MASS<span class="op">::</span><span class="kw">rlm</span>(Y4 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> geexex, <span class="dt">method =</span> <span class="st">'M'</span>)</a>
-<a class="sourceLine" id="cb29-2" data-line-number="2">theta_cls &lt;-<span class="st"> </span><span class="kw">coef</span>(m)</a>
-<a class="sourceLine" id="cb29-3" data-line-number="3">Sigma_cls &lt;-<span class="st"> </span><span class="kw">vcov</span>(m)</a></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1">results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)), </a>
-<a class="sourceLine" id="cb30-2" data-line-number="2">                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</a>
-<a class="sourceLine" id="cb30-3" data-line-number="3">results</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>psi_k &lt;-<span class="st"> </span><span class="cf">function</span>(x, <span class="dt">k =</span> <span class="fl">1.345</span>){</span>
+<span id="cb27-2"><a href="#cb27-2"></a>  <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</span>
+<span id="cb27-3"><a href="#cb27-3"></a>}</span>
+<span id="cb27-4"><a href="#cb27-4"></a></span>
+<span id="cb27-5"><a href="#cb27-5"></a>SB8_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb27-6"><a href="#cb27-6"></a>  Yi &lt;-<span class="st"> </span>data<span class="op">$</span>Y4</span>
+<span id="cb27-7"><a href="#cb27-7"></a>  xi &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(Y4 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> data)</span>
+<span id="cb27-8"><a href="#cb27-8"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb27-9"><a href="#cb27-9"></a>    r &lt;-<span class="st"> </span>Yi <span class="op">-</span><span class="st"> </span>xi <span class="op">%*%</span><span class="st"> </span>theta</span>
+<span id="cb27-10"><a href="#cb27-10"></a>    <span class="kw">c</span>(<span class="kw">psi_k</span>(r) <span class="op">%*%</span><span class="st"> </span>xi)</span>
+<span id="cb27-11"><a href="#cb27-11"></a>  }</span>
+<span id="cb27-12"><a href="#cb27-12"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb28-2"><a href="#cb28-2"></a>  <span class="dt">estFUN =</span> SB8_estFUN, </span>
+<span id="cb28-3"><a href="#cb28-3"></a>  <span class="dt">data  =</span> geexex,</span>
+<span id="cb28-4"><a href="#cb28-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>m &lt;-<span class="st"> </span>MASS<span class="op">::</span><span class="kw">rlm</span>(Y4 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> geexex, <span class="dt">method =</span> <span class="st">&#39;M&#39;</span>)</span>
+<span id="cb29-2"><a href="#cb29-2"></a>theta_cls &lt;-<span class="st"> </span><span class="kw">coef</span>(m)</span>
+<span id="cb29-3"><a href="#cb29-3"></a>Sigma_cls &lt;-<span class="st"> </span><span class="kw">vcov</span>(m)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)), </span>
+<span id="cb30-2"><a href="#cb30-2"></a>                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</span>
+<span id="cb30-3"><a href="#cb30-3"></a>results</span></code></pre></div>
 <pre><code>## $geex
 ## $geex$parameters
 ## [1] -0.04050369  0.14530196  0.30181589
@@ -570,28 +594,28 @@ k * sgn(Y_{1i} - \theta) &amp;  \text{when } |(Y_{1i} - \theta)| &gt; k\\
 D_i(\beta)\frac{Y_i - \mu_i(\beta)}{V_i(\beta) \tau}
 \end{pmatrix}
 \]</span></p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1">SB9_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb32-2" data-line-number="2">  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y5</a>
-<a class="sourceLine" id="cb32-3" data-line-number="3">  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(Y5 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> data, <span class="dt">drop =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb32-4" data-line-number="4">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb32-5" data-line-number="5">    lp &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>theta</a>
-<a class="sourceLine" id="cb32-6" data-line-number="6">    mu &lt;-<span class="st"> </span><span class="kw">plogis</span>(lp)</a>
-<a class="sourceLine" id="cb32-7" data-line-number="7">    D  &lt;-<span class="st"> </span><span class="kw">t</span>(X) <span class="op">%*%</span><span class="st"> </span><span class="kw">dlogis</span>(lp)</a>
-<a class="sourceLine" id="cb32-8" data-line-number="8">    V  &lt;-<span class="st"> </span>mu <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>mu)</a>
-<a class="sourceLine" id="cb32-9" data-line-number="9">    D <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(V) <span class="op">%*%</span><span class="st"> </span>(Y <span class="op">-</span><span class="st"> </span>mu)</a>
-<a class="sourceLine" id="cb32-10" data-line-number="10">  }</a>
-<a class="sourceLine" id="cb32-11" data-line-number="11">}</a></code></pre></div>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb33-2" data-line-number="2">  <span class="dt">estFUN =</span> SB9_estFUN, </a>
-<a class="sourceLine" id="cb33-3" data-line-number="3">  <span class="dt">data  =</span> geexex, </a>
-<a class="sourceLine" id="cb33-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">1</span>, <span class="fl">.1</span>, <span class="fl">.5</span>)))</a></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>SB9_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb32-2"><a href="#cb32-2"></a>  Y &lt;-<span class="st"> </span>data<span class="op">$</span>Y5</span>
+<span id="cb32-3"><a href="#cb32-3"></a>  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(Y5 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> data, <span class="dt">drop =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb32-4"><a href="#cb32-4"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb32-5"><a href="#cb32-5"></a>    lp &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>theta</span>
+<span id="cb32-6"><a href="#cb32-6"></a>    mu &lt;-<span class="st"> </span><span class="kw">plogis</span>(lp)</span>
+<span id="cb32-7"><a href="#cb32-7"></a>    D  &lt;-<span class="st"> </span><span class="kw">t</span>(X) <span class="op">%*%</span><span class="st"> </span><span class="kw">dlogis</span>(lp)</span>
+<span id="cb32-8"><a href="#cb32-8"></a>    V  &lt;-<span class="st"> </span>mu <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>mu)</span>
+<span id="cb32-9"><a href="#cb32-9"></a>    D <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(V) <span class="op">%*%</span><span class="st"> </span>(Y <span class="op">-</span><span class="st"> </span>mu)</span>
+<span id="cb32-10"><a href="#cb32-10"></a>  }</span>
+<span id="cb32-11"><a href="#cb32-11"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb33-2"><a href="#cb33-2"></a>  <span class="dt">estFUN =</span> SB9_estFUN, </span>
+<span id="cb33-3"><a href="#cb33-3"></a>  <span class="dt">data  =</span> geexex, </span>
+<span id="cb33-4"><a href="#cb33-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">1</span>, <span class="fl">.1</span>, <span class="fl">.5</span>)))</span></code></pre></div>
 <p>Compare point estimates to <code>glm</code> coefficients and covariance matrix to <code>sandwich</code>.</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1">m9 &lt;-<span class="st"> </span><span class="kw">glm</span>(Y5 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> geexex, <span class="dt">family =</span> <span class="kw">binomial</span>(<span class="dt">link =</span> <span class="st">'logit'</span>))</a>
-<a class="sourceLine" id="cb34-2" data-line-number="2">theta_cls &lt;-<span class="st"> </span><span class="kw">coef</span>(m9)</a>
-<a class="sourceLine" id="cb34-3" data-line-number="3">Sigma_cls &lt;-<span class="st"> </span>sandwich<span class="op">::</span><span class="kw">sandwich</span>(m9)</a></code></pre></div>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1">results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)),  </a>
-<a class="sourceLine" id="cb35-2" data-line-number="2">                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</a>
-<a class="sourceLine" id="cb35-3" data-line-number="3">results</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a>m9 &lt;-<span class="st"> </span><span class="kw">glm</span>(Y5 <span class="op">~</span><span class="st"> </span>X1 <span class="op">+</span><span class="st"> </span>X2, <span class="dt">data =</span> geexex, <span class="dt">family =</span> <span class="kw">binomial</span>(<span class="dt">link =</span> <span class="st">&#39;logit&#39;</span>))</span>
+<span id="cb34-2"><a href="#cb34-2"></a>theta_cls &lt;-<span class="st"> </span><span class="kw">coef</span>(m9)</span>
+<span id="cb34-3"><a href="#cb34-3"></a>Sigma_cls &lt;-<span class="st"> </span>sandwich<span class="op">::</span><span class="kw">sandwich</span>(m9)</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>results &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">geex =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> <span class="kw">coef</span>(estimates), <span class="dt">vcov =</span> <span class="kw">vcov</span>(estimates)),  </span>
+<span id="cb35-2"><a href="#cb35-2"></a>                <span class="dt">cls =</span> <span class="kw">list</span>(<span class="dt">parameters =</span> theta_cls, <span class="dt">vcov =</span> Sigma_cls))</span>
+<span id="cb35-3"><a href="#cb35-3"></a>results</span></code></pre></div>
 <pre><code>## $geex
 ## $geex$parameters
 ## [1] -1.1256071  0.3410619 -0.1148368
@@ -627,62 +651,65 @@ D_i(\beta)\frac{Y_i - \mu_i(\beta)}{V_i(\beta) \tau}
 Y_i - n_i \theta_2
 \end{pmatrix}
 \]</span></p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" data-line-number="1">SB10_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</a>
-<a class="sourceLine" id="cb37-2" data-line-number="2">  Y &lt;-<span class="st"> </span>data<span class="op">$</span>ft_made</a>
-<a class="sourceLine" id="cb37-3" data-line-number="3">  n &lt;-<span class="st"> </span>data<span class="op">$</span>ft_attp</a>
-<a class="sourceLine" id="cb37-4" data-line-number="4">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb37-5" data-line-number="5">    p &lt;-<span class="st"> </span>theta[<span class="dv">2</span>]</a>
-<a class="sourceLine" id="cb37-6" data-line-number="6">    <span class="kw">c</span>(((Y <span class="op">-</span><span class="st"> </span>(n <span class="op">*</span><span class="st"> </span>p))<span class="op">^</span><span class="dv">2</span>)<span class="op">/</span>(n <span class="op">*</span><span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p))  <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>], </a>
-<a class="sourceLine" id="cb37-7" data-line-number="7">      Y <span class="op">-</span><span class="st"> </span>n <span class="op">*</span><span class="st"> </span>p)</a>
-<a class="sourceLine" id="cb37-8" data-line-number="8">  }</a>
-<a class="sourceLine" id="cb37-9" data-line-number="9">}</a></code></pre></div>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" data-line-number="1">estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb38-2" data-line-number="2">  <span class="dt">estFUN =</span> SB10_estFUN, </a>
-<a class="sourceLine" id="cb38-3" data-line-number="3">  <span class="dt">data  =</span> shaq, </a>
-<a class="sourceLine" id="cb38-4" data-line-number="4">  <span class="dt">units =</span> <span class="st">'game'</span>, </a>
-<a class="sourceLine" id="cb38-5" data-line-number="5">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">5</span>, <span class="fl">.5</span>)))</a></code></pre></div>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1">V11 &lt;-<span class="st"> </span><span class="cf">function</span>(p) {</a>
-<a class="sourceLine" id="cb39-2" data-line-number="2">  k    &lt;-<span class="st"> </span><span class="kw">nrow</span>(shaq)</a>
-<a class="sourceLine" id="cb39-3" data-line-number="3">  sumn &lt;-<span class="st"> </span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_attp)</a>
-<a class="sourceLine" id="cb39-4" data-line-number="4">  sumn_inv &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="dv">1</span><span class="op">/</span>shaq<span class="op">$</span>ft_attp)</a>
-<a class="sourceLine" id="cb39-5" data-line-number="5">  term2_n  &lt;-<span class="st"> </span><span class="dv">1</span> <span class="op">-</span><span class="st"> </span>(<span class="dv">6</span> <span class="op">*</span><span class="st"> </span>p) <span class="op">+</span><span class="st"> </span>(<span class="dv">6</span> <span class="op">*</span><span class="st"> </span>p<span class="op">^</span><span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb39-6" data-line-number="6">  term2_d &lt;-<span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p) </a>
-<a class="sourceLine" id="cb39-7" data-line-number="7">  term2  &lt;-<span class="st"> </span>term2_n<span class="op">/</span>term2_d</a>
-<a class="sourceLine" id="cb39-8" data-line-number="8">  term3  &lt;-<span class="st"> </span>((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>(<span class="dv">2</span> <span class="op">*</span><span class="st"> </span>p))<span class="op">^</span><span class="dv">2</span>) <span class="op">/</span><span class="st"> </span>((sumn<span class="op">/</span>k) <span class="op">*</span><span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p))</a>
-<a class="sourceLine" id="cb39-9" data-line-number="9">  <span class="dv">2</span> <span class="op">+</span><span class="st"> </span>(term2 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">/</span>k) <span class="op">*</span><span class="st"> </span>sumn_inv) <span class="op">-</span><span class="st"> </span>term3</a>
-<a class="sourceLine" id="cb39-10" data-line-number="10">}</a>
-<a class="sourceLine" id="cb39-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb39-12" data-line-number="12">p_tilde &lt;-<span class="st"> </span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_made)<span class="op">/</span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_attp)</a>
-<a class="sourceLine" id="cb39-13" data-line-number="13">V11_hat &lt;-<span class="st"> </span><span class="kw">V11</span>(p_tilde)<span class="op">/</span><span class="dv">23</span></a>
-<a class="sourceLine" id="cb39-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb39-15" data-line-number="15"><span class="co"># Compare variance estimates</span></a>
-<a class="sourceLine" id="cb39-16" data-line-number="16">V11_hat</a></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>SB10_estFUN &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
+<span id="cb37-2"><a href="#cb37-2"></a>  Y &lt;-<span class="st"> </span>data<span class="op">$</span>ft_made</span>
+<span id="cb37-3"><a href="#cb37-3"></a>  n &lt;-<span class="st"> </span>data<span class="op">$</span>ft_attp</span>
+<span id="cb37-4"><a href="#cb37-4"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb37-5"><a href="#cb37-5"></a>    p &lt;-<span class="st"> </span>theta[<span class="dv">2</span>]</span>
+<span id="cb37-6"><a href="#cb37-6"></a>    <span class="kw">c</span>(((Y <span class="op">-</span><span class="st"> </span>(n <span class="op">*</span><span class="st"> </span>p))<span class="op">^</span><span class="dv">2</span>)<span class="op">/</span>(n <span class="op">*</span><span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p))  <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>], </span>
+<span id="cb37-7"><a href="#cb37-7"></a>      Y <span class="op">-</span><span class="st"> </span>n <span class="op">*</span><span class="st"> </span>p)</span>
+<span id="cb37-8"><a href="#cb37-8"></a>  }</span>
+<span id="cb37-9"><a href="#cb37-9"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb38-2"><a href="#cb38-2"></a>  <span class="dt">estFUN =</span> SB10_estFUN, </span>
+<span id="cb38-3"><a href="#cb38-3"></a>  <span class="dt">data  =</span> shaq, </span>
+<span id="cb38-4"><a href="#cb38-4"></a>  <span class="dt">units =</span> <span class="st">&#39;game&#39;</span>, </span>
+<span id="cb38-5"><a href="#cb38-5"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(.<span class="dv">5</span>, <span class="fl">.5</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>V11 &lt;-<span class="st"> </span><span class="cf">function</span>(p) {</span>
+<span id="cb39-2"><a href="#cb39-2"></a>  k    &lt;-<span class="st"> </span><span class="kw">nrow</span>(shaq)</span>
+<span id="cb39-3"><a href="#cb39-3"></a>  sumn &lt;-<span class="st"> </span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_attp)</span>
+<span id="cb39-4"><a href="#cb39-4"></a>  sumn_inv &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="dv">1</span><span class="op">/</span>shaq<span class="op">$</span>ft_attp)</span>
+<span id="cb39-5"><a href="#cb39-5"></a>  term2_n  &lt;-<span class="st"> </span><span class="dv">1</span> <span class="op">-</span><span class="st"> </span>(<span class="dv">6</span> <span class="op">*</span><span class="st"> </span>p) <span class="op">+</span><span class="st"> </span>(<span class="dv">6</span> <span class="op">*</span><span class="st"> </span>p<span class="op">^</span><span class="dv">2</span>)</span>
+<span id="cb39-6"><a href="#cb39-6"></a>  term2_d &lt;-<span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p) </span>
+<span id="cb39-7"><a href="#cb39-7"></a>  term2  &lt;-<span class="st"> </span>term2_n<span class="op">/</span>term2_d</span>
+<span id="cb39-8"><a href="#cb39-8"></a>  term3  &lt;-<span class="st"> </span>((<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>(<span class="dv">2</span> <span class="op">*</span><span class="st"> </span>p))<span class="op">^</span><span class="dv">2</span>) <span class="op">/</span><span class="st"> </span>((sumn<span class="op">/</span>k) <span class="op">*</span><span class="st"> </span>p <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>p))</span>
+<span id="cb39-9"><a href="#cb39-9"></a>  <span class="dv">2</span> <span class="op">+</span><span class="st"> </span>(term2 <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">/</span>k) <span class="op">*</span><span class="st"> </span>sumn_inv) <span class="op">-</span><span class="st"> </span>term3</span>
+<span id="cb39-10"><a href="#cb39-10"></a>}</span>
+<span id="cb39-11"><a href="#cb39-11"></a></span>
+<span id="cb39-12"><a href="#cb39-12"></a>p_tilde &lt;-<span class="st"> </span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_made)<span class="op">/</span><span class="kw">sum</span>(shaq<span class="op">$</span>ft_attp)</span>
+<span id="cb39-13"><a href="#cb39-13"></a>V11_hat &lt;-<span class="st"> </span><span class="kw">V11</span>(p_tilde)<span class="op">/</span><span class="dv">23</span></span>
+<span id="cb39-14"><a href="#cb39-14"></a></span>
+<span id="cb39-15"><a href="#cb39-15"></a><span class="co"># Compare variance estimates</span></span>
+<span id="cb39-16"><a href="#cb39-16"></a>V11_hat</span></code></pre></div>
 <pre><code>## [1] 0.0783097</code></pre>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1"><span class="kw">vcov</span>(estimates)[<span class="dv">1</span>, <span class="dv">1</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a><span class="kw">vcov</span>(estimates)[<span class="dv">1</span>, <span class="dv">1</span>]</span></code></pre></div>
 <pre><code>## [1] 0.1929791</code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1"><span class="co"># Note the differences in the p-values</span></a>
-<a class="sourceLine" id="cb43-2" data-line-number="2"><span class="kw">pnorm</span>(<span class="fl">35.51</span><span class="op">/</span><span class="dv">23</span>, <span class="dt">mean  =</span> <span class="dv">1</span>, <span class="dt">sd =</span> <span class="kw">sqrt</span>(V11_hat), <span class="dt">lower.tail =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a><span class="co"># Note the differences in the p-values</span></span>
+<span id="cb43-2"><a href="#cb43-2"></a><span class="kw">pnorm</span>(<span class="fl">35.51</span><span class="op">/</span><span class="dv">23</span>, <span class="dt">mean  =</span> <span class="dv">1</span>, <span class="dt">sd =</span> <span class="kw">sqrt</span>(V11_hat), <span class="dt">lower.tail =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
 <pre><code>## [1] 0.02596785</code></pre>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" data-line-number="1"><span class="kw">pnorm</span>(<span class="kw">coef</span>(estimates)[<span class="dv">1</span>], </a>
-<a class="sourceLine" id="cb45-2" data-line-number="2">      <span class="dt">mean =</span> <span class="dv">1</span>, </a>
-<a class="sourceLine" id="cb45-3" data-line-number="3">      <span class="dt">sd =</span> <span class="kw">sqrt</span>(<span class="kw">vcov</span>(estimates)[<span class="dv">1</span>, <span class="dv">1</span>]),</a>
-<a class="sourceLine" id="cb45-4" data-line-number="4">      <span class="dt">lower.tail =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a><span class="kw">pnorm</span>(<span class="kw">coef</span>(estimates)[<span class="dv">1</span>], </span>
+<span id="cb45-2"><a href="#cb45-2"></a>      <span class="dt">mean =</span> <span class="dv">1</span>, </span>
+<span id="cb45-3"><a href="#cb45-3"></a>      <span class="dt">sd =</span> <span class="kw">sqrt</span>(<span class="kw">vcov</span>(estimates)[<span class="dv">1</span>, <span class="dv">1</span>]),</span>
+<span id="cb45-4"><a href="#cb45-4"></a>      <span class="dt">lower.tail =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
 <pre><code>## [1] 0.1078138</code></pre>
 <p>This example shows that the empircal sandwich variance estimator may be different from other sandwich variance estimators that make assumptions about the structure of the <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> matrices.</p>
 </div>
 </div>
 <div id="references" class="section level2 unnumbered">
-<h2>References</h2>
-<div id="refs" class="references">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references hanging-indent">
 <div id="ref-huber1964">
 <p>Huber, Peter J. 1964. <em>Robust Estimation of a Location Parameter</em> 35.</p>
 </div>
 <div id="ref-stefanski2002">
-<p>Stefanski, Len A., and Dennis D. Boos. 2002. <em>The Calculus of M-Estimation</em> 56. <a href="https://doi.org/10.1198/000313002753631330" class="uri">https://doi.org/10.1198/000313002753631330</a>.</p>
+<p>Stefanski, Len A., and Dennis D. Boos. 2002. <em>The Calculus of M-Estimation</em> 56. <a href="https://doi.org/10.1198/000313002753631330">https://doi.org/10.1198/000313002753631330</a>.</p>
 </div>
 </div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

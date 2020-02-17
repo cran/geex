@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2018-09-23" />
+<meta name="date" content="2020-02-17" />
 
 <title>Using different or custom root solvers in geex</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -50,9 +49,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -83,7 +82,29 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -271,6 +292,9 @@ code > span.al { color: #ff0000; font-weight: bold; }
 code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
+
+
+
 </head>
 
 <body>
@@ -279,8 +303,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 <h1 class="title toc-ignore">Using different or custom root solvers in <code>geex</code></h1>
-<h4 class="author"><em>Bradley Saul</em></h4>
-<h4 class="date"><em>2018-09-23</em></h4>
+<h4 class="author">Bradley Saul</h4>
+<h4 class="date">2020-02-17</h4>
 
 
 
@@ -288,24 +312,24 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <h2>Choice of <code>rootFUN</code></h2>
 <p>By default, <code>geex</code> uses the <a href="https://cran.r-project.org/package=rootSolve"><code>rootSolve::multiroot</code></a> function for finding roots of a set of estimating equations when <code>compute_roots = TRUE</code> in <code>m_estimate()</code>. However, a user can choose a different root find find algorithm via the <code>root_control</code> argument.</p>
 <p>For example, consider the following <code>estFUN</code> which is Huber’s estimator for the center of symmetric distributions [<span class="citation">@stefanski2002</span>; example 6]. This example was chosen because it has a single root, so that the <code>stats::uniroot</code> function can be used to find the roots.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">myefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, <span class="dt">k =</span> <span class="fl">1.5</span>){</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="cf">function</span>(theta){</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">    x &lt;-<span class="st"> </span>data<span class="op">$</span>Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">    <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">  }</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">}</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>myefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, <span class="dt">k =</span> <span class="fl">1.5</span>){</span>
+<span id="cb1-2"><a href="#cb1-2"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb1-3"><a href="#cb1-3"></a>    x &lt;-<span class="st"> </span>data<span class="op">$</span>Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>]</span>
+<span id="cb1-4"><a href="#cb1-4"></a>    <span class="cf">if</span>(<span class="kw">abs</span>(x) <span class="op">&lt;=</span><span class="st"> </span>k) x <span class="cf">else</span> <span class="kw">sign</span>(x) <span class="op">*</span><span class="st"> </span>k</span>
+<span id="cb1-5"><a href="#cb1-5"></a>  }</span>
+<span id="cb1-6"><a href="#cb1-6"></a>}</span></code></pre></div>
 <p>Internally, <code>estFUN</code> is used to build <span class="math inline">\(G_m = \sum_{i = 1}^m \psi(O_i, \theta)\)</span> or in psuedo-code <code>f = sum(inner_estFUN(theta))</code>. <code>f</code> is passed to the root finding function along with options in the <code>root_control</code> arguments. For example, <code>multiroot</code> requires <code>f</code> and <code>start</code> (starting values for the algorithm:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">multiroot_results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">  <span class="dt">estFUN =</span> myefun, </a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  <span class="dt">data  =</span> geexex,</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">3</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>multiroot_results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  <span class="dt">estFUN =</span> myefun, </span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="dt">data  =</span> geexex,</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="dv">3</span>))</span></code></pre></div>
 <p>The <code>stats::uniroot</code> function, however, requires the arguments <code>f</code> and <code>interval</code> (or <code>lower</code> and <code>upper</code>)</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">uniroot_results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="dt">estFUN =</span> myefun, </a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="dt">data  =</span> geexex,</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(stats<span class="op">::</span>uniroot, <span class="dt">interval =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">10</span>)))</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>uniroot_results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="dt">estFUN =</span> myefun, </span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="dt">data  =</span> geexex,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(stats<span class="op">::</span>uniroot, <span class="dt">interval =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">10</span>)))</span></code></pre></div>
 <p>Comparing results:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">roots</span>(multiroot_results) <span class="op">-</span><span class="st"> </span><span class="kw">roots</span>(uniroot_results)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">roots</span>(multiroot_results) <span class="op">-</span><span class="st"> </span><span class="kw">roots</span>(uniroot_results)</span></code></pre></div>
 <pre><code>## [1] 6.244845e-07</code></pre>
 <p>They are basically the same, but this may not be true depending <code>f</code> and the options given to the root finder.</p>
 </div>
@@ -314,10 +338,13 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <p>All that is necessary for <code>rootFUN</code> is a function where:</p>
 <ul>
 <li>the <em>first</em> argument is the function whose roots are sought</li>
-<li>the output is a named list where the root estimates can be identified by the <code>rootFUN_object</code> argument in <code>m_estimate</code>. For example, both <code>uniroot</code> and <code>multiroot</code> return a list where the root estimates are in the item named “roots”. The default is <code>rootFUN_object = 'roots'</code>, so this option works for both <code>uniroot</code> and <code>multiroot</code>.</li>
+<li>the output is a named list where the root estimates can be identified by the <code>rootFUN_object</code> argument in <code>m_estimate</code>. For example, both <code>uniroot</code> and <code>multiroot</code> return a list where the root estimates are in the item named “roots”. The default is <code>rootFUN_object = &#39;roots&#39;</code>, so this option works for both <code>uniroot</code> and <code>multiroot</code>.</li>
 </ul>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

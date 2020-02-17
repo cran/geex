@@ -1,9 +1,9 @@
-## ---- echo = FALSE, message = FALSE, warning=FALSE-----------------------
+## ---- echo = FALSE, message = FALSE, warning=FALSE----------------------------
 library(geex)
 library(knitr)
 opts_knit$set(progress = TRUE, verbose = TRUE)
 
-## ----SB1_estfun, echo=TRUE, results='hide'-------------------------------
+## ----SB1_estfun, echo=TRUE, results='hide'------------------------------------
 SB1_estfun <- function(data){
   Y1 <- data$Y1
   function(theta){
@@ -12,14 +12,14 @@ SB1_estfun <- function(data){
   }
 }
 
-## ----SB1_run, echo=TRUE, eval=TRUE, message=FALSE------------------------
+## ----SB1_run, echo=TRUE, eval=TRUE, message=FALSE-----------------------------
 library(geex)
 results <- m_estimate(
     estFUN = SB1_estfun, 
     data   = geexex,
     root_control = setup_root_control(start = c(1,1)))
 
-## ----SB1_clsform, echo=TRUE, eval = TRUE---------------------------------
+## ----SB1_clsform, echo=TRUE, eval = TRUE--------------------------------------
 n <- nrow(geexex)
 A <- diag(1, nrow = 2)
 
@@ -45,10 +45,10 @@ Sigma_cls <- (solve(A) %*% B %*% t(solve(A))) / n
 comparison <- list(geex = list(estimates = coef(results), vcov = vcov(results)), 
                    cls  = list(estimates = theta_cls, vcov = Sigma_cls))
 
-## ----SB1_results, echo = FALSE-------------------------------------------
+## ----SB1_results, echo = FALSE------------------------------------------------
 comparison
 
-## ----SB2_eefun, echo = TRUE----------------------------------------------
+## ----SB2_eefun, echo = TRUE---------------------------------------------------
 SB2_estfun <- function(data){
   Y1 <- data$Y1; Y2 <- data$Y2
   function(theta){
@@ -59,13 +59,13 @@ SB2_estfun <- function(data){
   }
 }
 
-## ----SB2_run, echo = TRUE, message = FALSE-------------------------------
+## ----SB2_run, echo = TRUE, message = FALSE------------------------------------
 results <- m_estimate(
     estFUN = SB2_estfun, 
     data  = geexex, 
     root_control = setup_root_control(start = c(1, 1, 1)))
 
-## ----SB2_clsform, echo = TRUE--------------------------------------------
+## ----SB2_clsform, echo = TRUE-------------------------------------------------
 # Comparison to an analytically derived sanwich estimator
 A <- with(geexex, {
  matrix(
@@ -91,10 +91,10 @@ Sigma_cls <- (solve(A) %*% B %*% t(solve(A))) / nrow(geexex)
 comparison <- list(geex = list(estimates = coef(results), vcov = vcov(results)), 
                    cls  = list(estimates = theta_cls, vcov = Sigma_cls))
 
-## ----SB2_results, echo = TRUE--------------------------------------------
+## ----SB2_results, echo = TRUE-------------------------------------------------
 comparison
 
-## ----SB3_eefun, echo = TRUE, warning = FALSE, message=FALSE--------------
+## ----SB3_eefun, echo = TRUE, warning = FALSE, message=FALSE-------------------
 SB3_estfun <- function(data){
   Y1 <- data$Y1
   function(theta){
@@ -105,13 +105,13 @@ SB3_estfun <- function(data){
   }
 }
 
-## ----SB3_run, echo = FALSE, message=FALSE--------------------------------
+## ----SB3_run, echo = FALSE, message=FALSE-------------------------------------
 results <- m_estimate(
    estFUN= SB3_estfun, 
    data  = geexex,
    root_control = setup_root_control(start = rep(2, 4, 4, 4)))
 
-## ----SB3_clsform, echo = TRUE--------------------------------------------
+## ----SB3_clsform, echo = TRUE-------------------------------------------------
 ## closed form roots
 theta_cls <- numeric(4)
 theta_cls[1] <- mean(geexex$Y1)
@@ -135,6 +135,6 @@ Sigma_cls <- matrix(
 comparison <- list(geex = list(estimates = coef(results), vcov = vcov(results)), 
                    cls  = list(estimates = theta_cls, vcov = Sigma_cls))
 
-## ----SB3_results, echo = FALSE-------------------------------------------
+## ----SB3_results, echo = FALSE------------------------------------------------
 comparison
 

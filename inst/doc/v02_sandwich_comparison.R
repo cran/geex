@@ -1,4 +1,4 @@
-## ----eefun, echo=TRUE----------------------------------------------------
+## ----eefun, echo=TRUE---------------------------------------------------------
 eefun <- function(data, model){
   X <- model.matrix(model, data = data)
   Y <- model.response(model.frame(model, data = data))
@@ -11,7 +11,7 @@ eefun <- function(data, model){
   }
 }
 
-## ----example1------------------------------------------------------------
+## ----example1-----------------------------------------------------------------
 library(geex)
 library(inferference)
 mglm    <- glm(A ~ X1, data = vaccinesim, family = binomial)

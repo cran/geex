@@ -1,9 +1,9 @@
-## ----packages, echo =TRUE------------------------------------------------
+## ----packages, echo =TRUE-----------------------------------------------------
 library(geex)
 library(inferference)
 library(dplyr)
 
-## ----simulated_data, echo = TRUE-----------------------------------------
+## ----simulated_data, echo = TRUE----------------------------------------------
 n <- 1000
 x <- data_frame(
   A  = rbinom(n, 1, .2),
@@ -11,7 +11,7 @@ x <- data_frame(
   Y1 = rnorm(n, 2 * A, 1),
   Y = (A*Y1) + (1 - A)*Y0)
 
-## ----ipw_estfun, echo = TRUE---------------------------------------------
+## ----ipw_estfun, echo = TRUE--------------------------------------------------
 ipw_estFUN <- function(data){
   A <- data$A
   Y <- data$Y
@@ -33,14 +33,14 @@ ipw_estFUN <- function(data){
   }
 }
 
-## ----ipw_estimation, echo = TRUE-----------------------------------------
+## ----ipw_estimation, echo = TRUE----------------------------------------------
 phat <- mean(x$A)
 out <- m_estimate(ipw_estFUN,
            data = x,
            inner_args = list(phat = phat),
            root_control = setup_root_control(start = c(.5, .5, 0, 0, 0)))
 
-## ----ipw_comparison, echo = TRUE-----------------------------------------
+## ----ipw_comparison, echo = TRUE----------------------------------------------
 ## Comparing point estimates
 all.equal(mean(x$Y * x$A/phat), coef(out)[4]) 
 all.equal(phat, coef(out)[2]) 
@@ -56,7 +56,7 @@ y <- x$Y * x$A/phat - mean(x$Y * x$A/phat)
 z <- (x$A - phat) / (phat*(1 - phat))
 var(y - predict(lm(y ~ z))) - geex_vcov[4] # close
 
-## ----eefun, echo=TRUE----------------------------------------------------
+## ----eefun, echo=TRUE---------------------------------------------------------
 eefun <- function(data, model, alpha){
   X <- model.matrix(model, data = data)
   A <- model.response(model.frame(model, data = data))
@@ -81,12 +81,12 @@ eefun <- function(data, model, alpha){
   }
 }
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 if(packageVersion('inferference') < '0.5.0'){
   vaccinesim$Y <- vaccinesim$y
 }
 
-## ----example2, echo =TRUE------------------------------------------------
+## ----example2, echo =TRUE-----------------------------------------------------
 test <- interference(
   formula = Y | A ~ X1 | group, 
   data   = vaccinesim,
@@ -115,7 +115,7 @@ Sigma <- vcov(ce_estimates)
 sqrt(t(L) %*% Sigma %*% L)  # from GEEX
 direct_effect(test, allocation = .35)$std.error # from inferference
 
-## ----dr_estfun, echo = TRUE----------------------------------------------
+## ----dr_estfun, echo = TRUE---------------------------------------------------
 dr_estFUN <- function(data, models){
   
   Z <- data$Z
@@ -148,7 +148,7 @@ dr_estFUN <- function(data, models){
   }
 }
 
-## ----estimate_dr---------------------------------------------------------
+## ----estimate_dr--------------------------------------------------------------
 estimate_dr <- function(data, propensity_formula, outcome_formula){
   e_model  <- glm(propensity_formula, data = data, family = binomial)
   m0_model <- glm(outcome_formula, subset = (Z == 0), data = data)
@@ -163,7 +163,7 @@ estimate_dr <- function(data, propensity_formula, outcome_formula){
     outer_args = list(models = models))
 }
 
-## ----lunceford_simulation, echo = TRUE-----------------------------------
+## ----lunceford_simulation, echo = TRUE----------------------------------------
 library(mvtnorm)
 tau_0 <- c(-1, -1, 1, 1)
 tau_1 <- tau_0 * -1
@@ -192,11 +192,11 @@ gen_data <- function(n, beta, nu, xi){
 }
 
 
-## ----dr_estimation-------------------------------------------------------
+## ----dr_estimation------------------------------------------------------------
 dt <- gen_data(1000, c(0, 0.6, -0.6, 0.6), c(0, -1, 1, -1, 2), c(-1, 1, 1))
 geex_results <- estimate_dr(dt, Z ~ X1 + X2 + X3, Y ~ X1 + X2 + X3)
 
-## ----dr_byhand-----------------------------------------------------------
+## ----dr_byhand----------------------------------------------------------------
 e  <- predict(glm(Z ~ X1 + X2 + X3, data = dt, family = "binomial"),
               type = "response")
 m0 <- predict(glm(Y ~ X1 + X2 + X3, data = dt, subset = Z==0), newdata = dt)

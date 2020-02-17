@@ -1,11 +1,11 @@
-## ---- echo = TRUE, eval=FALSE--------------------------------------------
+## ---- echo = TRUE, eval=FALSE-------------------------------------------------
 #  correct_by_nothing <- function(components){
 #    A <- grab_bread(components)
 #    B <- grab_meat(components)
 #    compute_sigma(A = A, B = B)
 #  }
 
-## ---- echo = TRUE--------------------------------------------------------
+## ---- echo = TRUE-------------------------------------------------------------
 bias_correction <- function(components, b){
   A <- grab_bread(components)
   A_i <- grab_bread_list(components)
@@ -24,7 +24,7 @@ bias_correction <- function(components, b){
   compute_sigma(A = A, B = Bbc)
 }
 
-## ----FAY1_eefun, echo = TRUE---------------------------------------------
+## ----FAY1_eefun, echo = TRUE--------------------------------------------------
 gee_eefun <- function(data, formula, family){
   X <- model.matrix(object = formula, data = data)
   Y <- model.response(model.frame(formula = formula, data = data))
@@ -40,11 +40,11 @@ gee_eefun <- function(data, formula, family){
   }
 }
 
-## ----setup_gee, echo = TRUE, message = FALSE, results = 'hide'-----------
+## ----setup_gee, echo = TRUE, message = FALSE, results = 'hide'----------------
 g <- gee::gee(breaks~tension, id=wool, data=warpbreaks, corstr="exchangeable")
 guo <- saws::geeUOmega(g)
 
-## ----correction_run, echo = TRUE-----------------------------------------
+## ----correction_run, echo = TRUE----------------------------------------------
 library(geex)
 results <- m_estimate(
   estFUN = gee_eefun, data  = warpbreaks, 
@@ -57,7 +57,7 @@ results <- m_estimate(
    bias_correction_.1 = correction(bias_correction, b = .1),
    bias_correction_.3 = correction(bias_correction, b = .3))) 
 
-## ----correction_comparison, echo = FALSE, results = 'hide'---------------
+## ----correction_comparison, echo = FALSE, results = 'hide'--------------------
 saws::saws(guo, method = 'd1')$V 
 vcov(results)
 
