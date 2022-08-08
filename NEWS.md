@@ -1,3 +1,14 @@
+# geex 1.1.1
+
+* Removes `ivpack` dependency from additional examples vignette
+in order to get geex back on CRAN.
+* Removes the internal `compute_sum_of_list` and `compute_pairwise_sum_of_list`
+functions from exports.
+
+# geex 1.1.0
+
+* adds a `Asolver` argument to `m_estimate` to allow for using a different to compute the inverse of the A ("bread") matrix.
+
 # geex 1.0.11
 
 * renames the `geex-summary` class to `geex_summary`

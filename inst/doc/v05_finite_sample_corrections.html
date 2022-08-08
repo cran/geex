@@ -8,21 +8,52 @@
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2022-07-24" />
 
 <title>Finite sample correction API in geex</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -108,6 +139,29 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
 <style type="text/css">body {
 background-color: #fff;
 margin: 1em auto;
@@ -118,9 +172,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -289,7 +340,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -302,26 +354,43 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 
-<h1 class="title toc-ignore">Finite sample correction API in <code>geex</code></h1>
+<h1 class="title toc-ignore">Finite sample correction API in
+<code>geex</code></h1>
 <h4 class="author">Bradley Saul</h4>
-<h4 class="date">2020-02-17</h4>
+<h4 class="date">2022-07-24</h4>
 
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>The empirical sandwich variance estimator is known to underestimate <span class="math inline">\(V(\theta)\)</span> in small samples <span class="citation">(Fay and Graubard 2001)</span>. Particularly in the context of GEE, <a href="https://bsaul.github.io/geex/articles/articles/mestimation_bib.html">many authors</a> have proposed corrections that modify components of <span class="math inline">\(\hat{\Sigma}\)</span> and/or by assuming <span class="math inline">\(\hat{\theta}\)</span> follows a <span class="math inline">\(t\)</span> (or <span class="math inline">\(F\)</span>), as opposed to Normal, distribution with some estimated degrees of freedom. Many of the proposed corrections somehow modify a combination of the <span class="math inline">\(A_i\)</span>, <span class="math inline">\(A_m\)</span>, <span class="math inline">\(B_i\)</span>, or <span class="math inline">\(B_m\)</span> matrices.</p>
-<p><code>geex</code> provides an API that allows users to specify functions that utilize these matrices to form corrections. A finite sample correction function at a minimum takes the argument <code>components</code>, which is an object of class <code>sandwich_components</code>. For example,</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>correct_by_nothing &lt;-<span class="st"> </span><span class="cf">function</span>(components){</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</span>
-<span id="cb1-3"><a href="#cb1-3"></a>  B &lt;-<span class="st"> </span><span class="kw">grab_meat</span>(components)</span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> B)</span>
-<span id="cb1-5"><a href="#cb1-5"></a>}</span></code></pre></div>
-<p>is a correctly formed function that does no corrections. Additional arguments may also be specified, as shown in the example.</p>
+<p>The empirical sandwich variance estimator is known to underestimate
+<span class="math inline">\(V(\theta)\)</span> in small samples <span class="citation">(Fay and Graubard 2001)</span>. Particularly in the
+context of GEE, <a href="https://bsaul.github.io/geex/articles/articles/mestimation_bib.html">many
+authors</a> have proposed corrections that modify components of <span class="math inline">\(\hat{\Sigma}\)</span> and/or by assuming <span class="math inline">\(\hat{\theta}\)</span> follows a <span class="math inline">\(t\)</span> (or <span class="math inline">\(F\)</span>), as opposed to Normal, distribution
+with some estimated degrees of freedom. Many of the proposed corrections
+somehow modify a combination of the <span class="math inline">\(A_i\)</span>, <span class="math inline">\(A_m\)</span>, <span class="math inline">\(B_i\)</span>, or <span class="math inline">\(B_m\)</span> matrices.</p>
+<p><code>geex</code> provides an API that allows users to specify
+functions that utilize these matrices to form corrections. A finite
+sample correction function at a minimum takes the argument
+<code>components</code>, which is an object of class
+<code>sandwich_components</code>. For example,</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>correct_by_nothing <span class="ot">&lt;-</span> <span class="cf">function</span>(components){</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  A <span class="ot">&lt;-</span> <span class="fu">grab_bread</span>(components)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  B <span class="ot">&lt;-</span> <span class="fu">grab_meat</span>(components)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_sigma</span>(<span class="at">A =</span> A, <span class="at">B =</span> B)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>is a correctly formed function that does no corrections. Additional
+arguments may also be specified, as shown in the example.</p>
 </div>
 <div id="corrections-included-with-geex" class="section level2">
 <h2>Corrections included with <code>geex</code></h2>
-<p>The <code>geex</code> package includes the bias correction and degrees of freedom corrections proposed by <span class="citation">Fay and Graubard (2001)</span> in the <code>correct_by_fay_bias</code> and <code>correct_by_fay_df</code> functions respectively. The following demonstrates the construction and use of the bias correction. <span class="citation">Fay and Graubard (2001)</span> proposed the modified variance estimator <span class="math inline">\(\hat{\Sigma}^{bc}(b) = A_m^{-1} B_m^{bc}(b) \{A_m^{-1}\}^{\intercal}/m\)</span>, where:</p>
+<p>The <code>geex</code> package includes the bias correction and
+degrees of freedom corrections proposed by <span class="citation">Fay
+and Graubard (2001)</span> in the <code>correct_by_fay_bias</code> and
+<code>correct_by_fay_df</code> functions respectively. The following
+demonstrates the construction and use of the bias correction. <span class="citation">Fay and Graubard (2001)</span> proposed the modified
+variance estimator <span class="math inline">\(\hat{\Sigma}^{bc}(b) =
+A_m^{-1} B_m^{bc}(b) \{A_m^{-1}\}^{\intercal}/m\)</span>, where:</p>
 <p><span class="math display">\[\begin{equation}
 \label{eq:bc}
 B^{bc}_m(b) = \sum_{i = 1}^m H_i(b) B_i H_i(b)^{\intercal},
@@ -330,75 +399,120 @@ B^{bc}_m(b) = \sum_{i = 1}^m H_i(b) B_i H_i(b)^{\intercal},
 \label{eq:H}
 H_i(b) = \{1 - \min(b, \{A_i A^{-1}\}_{jj}) \}^{-1/2},
 \end{equation}\]</span></p>
-<p>and <span class="math inline">\(W_{jj}\)</span> is the <span class="math inline">\((j, j)\)</span> element of a matrix <span class="math inline">\(W\)</span>. When <span class="math inline">\(\{A_i A^{-1}\}_{jj}\)</span> is close to 1, the adjustment to <span class="math inline">\(\hat{\Sigma}^{bc}(b)\)</span> may be extreme, and the constant <span class="math inline">\(b\)</span> is chosen by the analyst to limit over adjustments.</p>
+<p>and <span class="math inline">\(W_{jj}\)</span> is the <span class="math inline">\((j, j)\)</span> element of a matrix <span class="math inline">\(W\)</span>. When <span class="math inline">\(\{A_i
+A^{-1}\}_{jj}\)</span> is close to 1, the adjustment to <span class="math inline">\(\hat{\Sigma}^{bc}(b)\)</span> may be extreme, and
+the constant <span class="math inline">\(b\)</span> is chosen by the
+analyst to limit over adjustments.</p>
 </div>
 <div id="bias-correction-example" class="section level2">
 <h2>Bias correction example</h2>
-<p>The bias corrected estimator <span class="math inline">\(\hat{\Sigma}^{bc}(b)\)</span> can be implemented in <code>geex</code> by the following function:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>bias_correction &lt;-<span class="st"> </span><span class="cf">function</span>(components, b){</span>
-<span id="cb2-2"><a href="#cb2-2"></a>  A &lt;-<span class="st"> </span><span class="kw">grab_bread</span>(components)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>  A_i &lt;-<span class="st"> </span><span class="kw">grab_bread_list</span>(components)</span>
-<span id="cb2-4"><a href="#cb2-4"></a>  B_i &lt;-<span class="st"> </span><span class="kw">grab_meat_list</span>(components)</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  Ainv &lt;-<span class="st"> </span><span class="kw">solve</span>(A)</span>
-<span id="cb2-6"><a href="#cb2-6"></a></span>
-<span id="cb2-7"><a href="#cb2-7"></a>  H_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(A_i, <span class="cf">function</span>(m){</span>
-<span id="cb2-8"><a href="#cb2-8"></a>    <span class="kw">diag</span>( (<span class="dv">1</span> <span class="op">-</span><span class="st"> </span><span class="kw">pmin</span>(b, <span class="kw">diag</span>(m <span class="op">%*%</span><span class="st"> </span>Ainv) ) )<span class="op">^</span>(<span class="op">-</span><span class="fl">0.5</span>) )</span>
-<span id="cb2-9"><a href="#cb2-9"></a>  })</span>
-<span id="cb2-10"><a href="#cb2-10"></a></span>
-<span id="cb2-11"><a href="#cb2-11"></a>  Bbc_i &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">seq_along</span>(B_i), <span class="cf">function</span>(i){</span>
-<span id="cb2-12"><a href="#cb2-12"></a>    H_i[[i]] <span class="op">%*%</span><span class="st"> </span>B_i[[i]] <span class="op">%*%</span><span class="st"> </span>H_i[[i]]</span>
-<span id="cb2-13"><a href="#cb2-13"></a>  })</span>
-<span id="cb2-14"><a href="#cb2-14"></a>  Bbc   &lt;-<span class="st"> </span><span class="kw">apply</span>(<span class="kw">simplify2array</span>(Bbc_i), <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, sum)</span>
-<span id="cb2-15"><a href="#cb2-15"></a></span>
-<span id="cb2-16"><a href="#cb2-16"></a>  <span class="kw">compute_sigma</span>(<span class="dt">A =</span> A, <span class="dt">B =</span> Bbc)</span>
-<span id="cb2-17"><a href="#cb2-17"></a>}</span></code></pre></div>
-<p>The <code>compute_sigma</code> function simply computes <span class="math inline">\(A^{-1} B \{A^{-1}\}^{\intercal}\)</span>. Note that <code>geex</code> computes <span class="math inline">\(A_m\)</span> and <span class="math inline">\(B_m\)</span> as the sums of <span class="math inline">\(A_i\)</span> and <span class="math inline">\(B_i\)</span> rather than the means, hence the appropriate function in the <code>apply</code> call is <code>sum</code> and not <code>mean</code>. To use this bias correction, the <code>m_estimate</code> function accepts a named list of corrections to perform. Each element of the list is also a list with two elements: <code>correctFUN</code>, the correction function; and <code>correctFUN_control</code>, a list of arguments passed to the <code>correctFUN</code> besides <code>A</code>, <code>A_i</code>, <code>B</code>, and <code>B_i</code>.</p>
+<p>The bias corrected estimator <span class="math inline">\(\hat{\Sigma}^{bc}(b)\)</span> can be implemented
+in <code>geex</code> by the following function:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>bias_correction <span class="ot">&lt;-</span> <span class="cf">function</span>(components, b){</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  A <span class="ot">&lt;-</span> <span class="fu">grab_bread</span>(components)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  A_i <span class="ot">&lt;-</span> <span class="fu">grab_bread_list</span>(components)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  B_i <span class="ot">&lt;-</span> <span class="fu">grab_meat_list</span>(components)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  Ainv <span class="ot">&lt;-</span> <span class="fu">solve</span>(A)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  H_i <span class="ot">&lt;-</span> <span class="fu">lapply</span>(A_i, <span class="cf">function</span>(m){</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diag</span>( (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pmin</span>(b, <span class="fu">diag</span>(m <span class="sc">%*%</span> Ainv) ) )<span class="sc">^</span>(<span class="sc">-</span><span class="fl">0.5</span>) )</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  Bbc_i <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_along</span>(B_i), <span class="cf">function</span>(i){</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    H_i[[i]] <span class="sc">%*%</span> B_i[[i]] <span class="sc">%*%</span> H_i[[i]]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  Bbc   <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">simplify2array</span>(Bbc_i), <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, sum)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_sigma</span>(<span class="at">A =</span> A, <span class="at">B =</span> Bbc)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The <code>compute_sigma</code> function simply computes <span class="math inline">\(A^{-1} B \{A^{-1}\}^{\intercal}\)</span>. Note
+that <code>geex</code> computes <span class="math inline">\(A_m\)</span>
+and <span class="math inline">\(B_m\)</span> as the sums of <span class="math inline">\(A_i\)</span> and <span class="math inline">\(B_i\)</span> rather than the means, hence the
+appropriate function in the <code>apply</code> call is <code>sum</code>
+and not <code>mean</code>. To use this bias correction, the
+<code>m_estimate</code> function accepts a named list of corrections to
+perform. Each element of the list is also a list with two elements:
+<code>correctFUN</code>, the correction function; and
+<code>correctFUN_control</code>, a list of arguments passed to the
+<code>correctFUN</code> besides <code>A</code>, <code>A_i</code>,
+<code>B</code>, and <code>B_i</code>.</p>
 </div>
 <div id="comparision-to-saws-package" class="section level2">
 <h2>Comparision to saws package</h2>
-<p>Here we compare the <code>geex</code> implementation of GEE with an exchangeable correlation matrix to Fay’s <code>saws</code> package.</p>
+<p>Here we compare the <code>geex</code> implementation of GEE with an
+exchangeable correlation matrix to Fay’s <code>saws</code> package.</p>
 <p>The estimating functions are:</p>
 <p><span class="math display">\[\begin{equation}
 \label{gee}
-\sum_{i= 1}^m \psi(\mathbf{Y}_i, \mathbf{X}_i, \beta) = \sum_{i = 1}^m \mathbf{D}_i^{\intercal} \mathbf{V}_i^{-1} (\mathbf{Y}_i - \mathbf{\mu}(\beta)) = 0
+\sum_{i= 1}^m \psi(\mathbf{Y}_i, \mathbf{X}_i, \beta) = \sum_{i = 1}^m
+\mathbf{D}_i^{\intercal} \mathbf{V}_i^{-1} (\mathbf{Y}_i -
+\mathbf{\mu}(\beta)) = 0
 \end{equation}\]</span></p>
-<p>where <span class="math inline">\(\mathbf{D}_i = \partial \mathbf{\mu}/\partial \mathbf{\beta}\)</span>. The covariance matrix is modeled by <span class="math inline">\(\mathbf{V}_i = \phi \mathbf{A}_i^{0.5} \mathbf{R}(\alpha) \mathbf{A}_i^{0.5}\)</span>. The matrix <span class="math inline">\(\mathbf{R}(\alpha)\)</span> is the “working” correlation matrix, which in this example is an exchangeable matrix with off diagonal elements <span class="math inline">\(\alpha\)</span>. The matrix <span class="math inline">\(\mathbf{A}_i\)</span> is a diagonal matrix with elements containing the variance functions of <span class="math inline">\(\mu\)</span>. The equations in  can be translated into an <code>eeFUN</code> as:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>gee_eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, formula, family){</span>
-<span id="cb3-2"><a href="#cb3-2"></a>  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(<span class="dt">object =</span> formula, <span class="dt">data =</span> data)</span>
-<span id="cb3-3"><a href="#cb3-3"></a>  Y &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(<span class="dt">formula =</span> formula, <span class="dt">data =</span> data))</span>
-<span id="cb3-4"><a href="#cb3-4"></a>  n &lt;-<span class="st"> </span><span class="kw">nrow</span>(X)</span>
-<span id="cb3-5"><a href="#cb3-5"></a>  <span class="cf">function</span>(theta, alpha, psi){</span>
-<span id="cb3-6"><a href="#cb3-6"></a>    mu  &lt;-<span class="st"> </span>family<span class="op">$</span><span class="kw">linkinv</span>(X <span class="op">%*%</span><span class="st"> </span>theta)</span>
-<span id="cb3-7"><a href="#cb3-7"></a>    Dt  &lt;-<span class="st"> </span><span class="kw">t</span>(X) <span class="op">%*%</span><span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(mu), <span class="dt">nrow =</span> n)</span>
-<span id="cb3-8"><a href="#cb3-8"></a>    A   &lt;-<span class="st"> </span><span class="kw">diag</span>(<span class="kw">as.numeric</span>(family<span class="op">$</span><span class="kw">variance</span>(mu)), <span class="dt">nrow =</span> n)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>    R   &lt;-<span class="st"> </span><span class="kw">matrix</span>(alpha, <span class="dt">nrow =</span> n, <span class="dt">ncol =</span> n)</span>
-<span id="cb3-10"><a href="#cb3-10"></a>    <span class="kw">diag</span>(R) &lt;-<span class="st"> </span><span class="dv">1</span></span>
-<span id="cb3-11"><a href="#cb3-11"></a>    V   &lt;-<span class="st"> </span>psi <span class="op">*</span><span class="st"> </span>(<span class="kw">sqrt</span>(A) <span class="op">%*%</span><span class="st"> </span>R <span class="op">%*%</span><span class="st"> </span><span class="kw">sqrt</span>(A))</span>
-<span id="cb3-12"><a href="#cb3-12"></a>    Dt <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(V) <span class="op">%*%</span><span class="st"> </span>(Y <span class="op">-</span><span class="st"> </span>mu)</span>
-<span id="cb3-13"><a href="#cb3-13"></a>  }</span>
-<span id="cb3-14"><a href="#cb3-14"></a>}</span></code></pre></div>
-<p>This <code>eeFUN</code> treats the correlation parameter <span class="math inline">\(\alpha\)</span> and scale parameter <span class="math inline">\(\phi\)</span> as fixed, though some estimation algorithms use an iterative procedure that alternates between estimating <span class="math inline">\(\beta\)</span> and these parameters. By customizing the root finding function, such an algorithm could be implemented using <code>geex</code> [see <code>vignette(&quot;geex_root_solvers&quot;)</code> for more information].</p>
-<p>We use this example to compare covariance estimates obtained from the <code>gee</code> function, so root finding computations are turned off. The <code>gee</code> <span class="math inline">\(\beta\)</span> estimates are used instead. Estimates for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\phi\)</span> are also extracted from the <code>gee</code> results in <code>m_estimate</code>. This example shows that an <code>eeFUN</code> can accept additional arguments to be passed to either the outer (data) function or the inner (theta) function. Unlike previous examples, the independent units are the types of wool, which is set in <code>m_estimate</code> by the <code>units</code> argument.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>g &lt;-<span class="st"> </span>gee<span class="op">::</span><span class="kw">gee</span>(breaks<span class="op">~</span>tension, <span class="dt">id=</span>wool, <span class="dt">data=</span>warpbreaks, <span class="dt">corstr=</span><span class="st">&quot;exchangeable&quot;</span>)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>guo &lt;-<span class="st"> </span>saws<span class="op">::</span><span class="kw">geeUOmega</span>(g)</span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">library</span>(geex)</span>
-<span id="cb5-2"><a href="#cb5-2"></a>results &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
-<span id="cb5-3"><a href="#cb5-3"></a>  <span class="dt">estFUN =</span> gee_eefun, <span class="dt">data  =</span> warpbreaks, </span>
-<span id="cb5-4"><a href="#cb5-4"></a>  <span class="dt">units =</span> <span class="st">&#39;wool&#39;</span>, <span class="dt">roots =</span> <span class="kw">coef</span>(g), <span class="dt">compute_roots =</span> <span class="ot">FALSE</span>,</span>
-<span id="cb5-5"><a href="#cb5-5"></a>  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">formula =</span> breaks <span class="op">~</span><span class="st"> </span>tension, </span>
-<span id="cb5-6"><a href="#cb5-6"></a>                      <span class="dt">family  =</span> <span class="kw">gaussian</span>()),</span>
-<span id="cb5-7"><a href="#cb5-7"></a>  <span class="dt">inner_args =</span> <span class="kw">list</span>(<span class="dt">alpha   =</span> g<span class="op">$</span>working.correlation[<span class="dv">1</span>,<span class="dv">2</span>], </span>
-<span id="cb5-8"><a href="#cb5-8"></a>                      <span class="dt">psi     =</span> g<span class="op">$</span>scale), </span>
-<span id="cb5-9"><a href="#cb5-9"></a>  <span class="dt">corrections =</span> <span class="kw">list</span>(</span>
-<span id="cb5-10"><a href="#cb5-10"></a>   <span class="dt">bias_correction_.1 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.1</span>),</span>
-<span id="cb5-11"><a href="#cb5-11"></a>   <span class="dt">bias_correction_.3 =</span> <span class="kw">correction</span>(bias_correction, <span class="dt">b =</span> <span class="fl">.3</span>))) </span></code></pre></div>
-<p>In the <code>geex</code> output, the item <code>corrections</code> contains a list of the results of computing each item in the <code>corrections_list</code>. Comparing the <code>geex</code> results to the results of the <code>saws::geeUOmega</code> function, the maximum difference in the results for any of corrected estimated covariance matrices is 1.1e-09.</p>
+<p>where <span class="math inline">\(\mathbf{D}_i = \partial
+\mathbf{\mu}/\partial \mathbf{\beta}\)</span>. The covariance matrix is
+modeled by <span class="math inline">\(\mathbf{V}_i = \phi
+\mathbf{A}_i^{0.5} \mathbf{R}(\alpha) \mathbf{A}_i^{0.5}\)</span>. The
+matrix <span class="math inline">\(\mathbf{R}(\alpha)\)</span> is the
+“working” correlation matrix, which in this example is an exchangeable
+matrix with off diagonal elements <span class="math inline">\(\alpha\)</span>. The matrix <span class="math inline">\(\mathbf{A}_i\)</span> is a diagonal matrix with
+elements containing the variance functions of <span class="math inline">\(\mu\)</span>. The equations in <span class="math inline">\(\eqref{gee}\)</span> can be translated into an
+<code>eeFUN</code> as:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>gee_eefun <span class="ot">&lt;-</span> <span class="cf">function</span>(data, formula, family){</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="at">object =</span> formula, <span class="at">data =</span> data)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> <span class="fu">model.response</span>(<span class="fu">model.frame</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> data))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(X)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(theta, alpha, psi){</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    mu  <span class="ot">&lt;-</span> family<span class="sc">$</span><span class="fu">linkinv</span>(X <span class="sc">%*%</span> theta)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Dt  <span class="ot">&lt;-</span> <span class="fu">t</span>(X) <span class="sc">%*%</span> <span class="fu">diag</span>(<span class="fu">as.numeric</span>(mu), <span class="at">nrow =</span> n)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    A   <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">as.numeric</span>(family<span class="sc">$</span><span class="fu">variance</span>(mu)), <span class="at">nrow =</span> n)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    R   <span class="ot">&lt;-</span> <span class="fu">matrix</span>(alpha, <span class="at">nrow =</span> n, <span class="at">ncol =</span> n)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diag</span>(R) <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    V   <span class="ot">&lt;-</span> psi <span class="sc">*</span> (<span class="fu">sqrt</span>(A) <span class="sc">%*%</span> R <span class="sc">%*%</span> <span class="fu">sqrt</span>(A))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    Dt <span class="sc">%*%</span> <span class="fu">solve</span>(V) <span class="sc">%*%</span> (Y <span class="sc">-</span> mu)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This <code>eeFUN</code> treats the correlation parameter <span class="math inline">\(\alpha\)</span> and scale parameter <span class="math inline">\(\phi\)</span> as fixed, though some estimation
+algorithms use an iterative procedure that alternates between estimating
+<span class="math inline">\(\beta\)</span> and these parameters. By
+customizing the root finding function, such an algorithm could be
+implemented using <code>geex</code> [see
+<code>vignette(&quot;geex_root_solvers&quot;)</code> for more information].</p>
+<p>We use this example to compare covariance estimates obtained from the
+<code>gee</code> function, so root finding computations are turned off.
+The <code>gee</code> <span class="math inline">\(\beta\)</span>
+estimates are used instead. Estimates for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\phi\)</span> are also extracted from the
+<code>gee</code> results in <code>m_estimate</code>. This example shows
+that an <code>eeFUN</code> can accept additional arguments to be passed
+to either the outer (data) function or the inner (theta) function.
+Unlike previous examples, the independent units are the types of wool,
+which is set in <code>m_estimate</code> by the <code>units</code>
+argument.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> gee<span class="sc">::</span><span class="fu">gee</span>(breaks<span class="sc">~</span>tension, <span class="at">id=</span>wool, <span class="at">data=</span>warpbreaks, <span class="at">corstr=</span><span class="st">&quot;exchangeable&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>guo <span class="ot">&lt;-</span> saws<span class="sc">::</span><span class="fu">geeUOmega</span>(g)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(geex)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">m_estimate</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">estFUN =</span> gee_eefun, <span class="at">data  =</span> warpbreaks, </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">units =</span> <span class="st">&#39;wool&#39;</span>, <span class="at">roots =</span> <span class="fu">coef</span>(g), <span class="at">compute_roots =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">outer_args =</span> <span class="fu">list</span>(<span class="at">formula =</span> breaks <span class="sc">~</span> tension, </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family  =</span> <span class="fu">gaussian</span>()),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">inner_args =</span> <span class="fu">list</span>(<span class="at">alpha   =</span> g<span class="sc">$</span>working.correlation[<span class="dv">1</span>,<span class="dv">2</span>], </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                      <span class="at">psi     =</span> g<span class="sc">$</span>scale), </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">corrections =</span> <span class="fu">list</span>(</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>   <span class="at">bias_correction_.1 =</span> <span class="fu">correction</span>(bias_correction, <span class="at">b =</span> .<span class="dv">1</span>),</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>   <span class="at">bias_correction_.3 =</span> <span class="fu">correction</span>(bias_correction, <span class="at">b =</span> .<span class="dv">3</span>))) </span></code></pre></div>
+<p>In the <code>geex</code> output, the item <code>corrections</code>
+contains a list of the results of computing each item in the
+<code>corrections_list</code>. Comparing the <code>geex</code> results
+to the results of the <code>saws::geeUOmega</code> function, the maximum
+difference in the results for any of corrected estimated covariance
+matrices is 1.1e-09.</p>
 </div>
 <div id="references" class="section level2 unnumbered">
 <h2 class="unnumbered">References</h2>
-<div id="refs" class="references hanging-indent">
-<div id="ref-fay2001">
-<p>Fay, Michael P., and Barry I. Graubard. 2001. <em>Small-Sample Adjustments for Wald-Type Tests Using Sandwich Estimators</em> 57.</p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-fay2001" class="csl-entry">
+Fay, Michael P., and Barry I. Graubard. 2001. <em>Small-Sample
+Adjustments for Wald-Type Tests Using Sandwich Estimators</em> 57.
 </div>
 </div>
 </div>

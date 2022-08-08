@@ -8,21 +8,52 @@
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2022-07-24" />
 
 <title>A comparison of geex and sandwich for robust covariance estimation</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -108,6 +139,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+
 <style type="text/css">body {
 background-color: #fff;
 margin: 1em auto;
@@ -118,9 +150,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -289,7 +318,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -302,51 +332,65 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 
-<h1 class="title toc-ignore">A comparison of <code>geex</code> and sandwich for robust covariance estimation</h1>
+<h1 class="title toc-ignore">A comparison of <code>geex</code> and
+sandwich for robust covariance estimation</h1>
 <h4 class="author">Bradley Saul</h4>
-<h4 class="date">2020-02-17</h4>
+<h4 class="date">2022-07-24</h4>
 
 
 
-<p>This examples uses the <code>vaccinesim</code> dataset from the <code>inferference</code> package to compare the estimated covariance matrix obtained from <code>geex</code> and <code>sandwich</code>. An example <span class="math inline">\(\psi\)</span> function written in <code>R</code>.</p>
+<p>This examples uses the <code>vaccinesim</code> dataset from the
+<code>inferference</code> package to compare the estimated covariance
+matrix obtained from <code>geex</code> and <code>sandwich</code>. An
+example <span class="math inline">\(\psi\)</span> function written in
+<code>R</code>.</p>
 <p>This function computes the score functions for a GLM.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>eefun &lt;-<span class="st"> </span><span class="cf">function</span>(data, model){</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  X &lt;-<span class="st"> </span><span class="kw">model.matrix</span>(model, <span class="dt">data =</span> data)</span>
-<span id="cb1-3"><a href="#cb1-3"></a>  Y &lt;-<span class="st"> </span><span class="kw">model.response</span>(<span class="kw">model.frame</span>(model, <span class="dt">data =</span> data))</span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="cf">function</span>(theta){</span>
-<span id="cb1-5"><a href="#cb1-5"></a>    lp  &lt;-<span class="st"> </span>X <span class="op">%*%</span><span class="st"> </span>theta</span>
-<span id="cb1-6"><a href="#cb1-6"></a>    rho &lt;-<span class="st"> </span><span class="kw">plogis</span>(lp)</span>
-<span id="cb1-7"><a href="#cb1-7"></a></span>
-<span id="cb1-8"><a href="#cb1-8"></a>    score_eqns &lt;-<span class="st"> </span><span class="kw">apply</span>(X, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="kw">sum</span>((Y <span class="op">-</span><span class="st"> </span>rho) <span class="op">*</span><span class="st"> </span>x))</span>
-<span id="cb1-9"><a href="#cb1-9"></a>    score_eqns</span>
-<span id="cb1-10"><a href="#cb1-10"></a>  }</span>
-<span id="cb1-11"><a href="#cb1-11"></a>}</span></code></pre></div>
-<p>Compare sandwich variance estimators to <code>sandwich</code> treating individuals as units:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(geex)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(inferference)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>mglm    &lt;-<span class="st"> </span><span class="kw">glm</span>(A <span class="op">~</span><span class="st"> </span>X1, <span class="dt">data =</span> vaccinesim, <span class="dt">family =</span> binomial)</span>
-<span id="cb2-4"><a href="#cb2-4"></a>estimates &lt;-<span class="st"> </span><span class="kw">m_estimate</span>(</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="dt">estFUN =</span> eefun,</span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="dt">data =</span> vaccinesim,</span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="op">-</span>.<span class="dv">35</span>, <span class="dv">0</span>)),</span>
-<span id="cb2-8"><a href="#cb2-8"></a>  <span class="dt">outer_args =</span> <span class="kw">list</span>(<span class="dt">model =</span> mglm))</span>
-<span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co"># Compare point estimates</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="kw">coef</span>(estimates) <span class="co"># from GEEX</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>eefun <span class="ot">&lt;-</span> <span class="cf">function</span>(data, model){</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(model, <span class="at">data =</span> data)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> <span class="fu">model.response</span>(<span class="fu">model.frame</span>(model, <span class="at">data =</span> data))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    lp  <span class="ot">&lt;-</span> X <span class="sc">%*%</span> theta</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    rho <span class="ot">&lt;-</span> <span class="fu">plogis</span>(lp)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    score_eqns <span class="ot">&lt;-</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">sum</span>((Y <span class="sc">-</span> rho) <span class="sc">*</span> x))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    score_eqns</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Compare sandwich variance estimators to <code>sandwich</code>
+treating individuals as units:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(geex)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(inferference)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>mglm    <span class="ot">&lt;-</span> <span class="fu">glm</span>(A <span class="sc">~</span> X1, <span class="at">data =</span> vaccinesim, <span class="at">family =</span> binomial)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>estimates <span class="ot">&lt;-</span> <span class="fu">m_estimate</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">estFUN =</span> eefun,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> vaccinesim,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">root_control =</span> <span class="fu">setup_root_control</span>(<span class="at">start =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">35</span>, <span class="dv">0</span>)),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">outer_args =</span> <span class="fu">list</span>(<span class="at">model =</span> mglm))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare point estimates</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(estimates) <span class="co"># from GEEX</span></span></code></pre></div>
 <pre><code>## [1] -0.36869683 -0.02037916</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">coef</span>(mglm) <span class="co"># from the GLM function</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mglm) <span class="co"># from the GLM function</span></span></code></pre></div>
 <pre><code>## (Intercept)          X1 
 ## -0.36869683 -0.02037916</code></pre>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># Compare variance estimates</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">vcov</span>(estimates)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare variance estimates</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vcov</span>(estimates)</span></code></pre></div>
 <pre><code>##               [,1]          [,2]
 ## [1,]  0.0028345579 -0.0007476536
 ## [2,] -0.0007476536  0.0003870030</code></pre>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>sandwich<span class="op">::</span><span class="kw">sandwich</span>(mglm)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sandwich<span class="sc">::</span><span class="fu">sandwich</span>(mglm)</span></code></pre></div>
 <pre><code>##               (Intercept)            X1
 ## (Intercept)  0.0028345579 -0.0007476536
 ## X1          -0.0007476536  0.0003870030</code></pre>
-<p>Pretty darn good! Note that the <code>geex</code> method is much slower than <code>sandwich</code> (especially using <code>method = &#39;Richardson&#39;</code> for <code>numDeriv</code>), but this is because <code>sandwich</code> uses the closed form of the score equations, while <code>geex</code> compute them numerically. However, <code>geex</code>’s real utility comes when you have more complicated estimating equations. Also, the analyst has the ability to code faster <span class="math inline">\(\psi\)</span> functions by optimizing their code or using <code>Rccp</code>, for example.</p>
+<p>Pretty darn good! Note that the <code>geex</code> method is much
+slower than <code>sandwich</code> (especially using
+<code>method = &#39;Richardson&#39;</code> for <code>numDeriv</code>), but this
+is because <code>sandwich</code> uses the closed form of the score
+equations, while <code>geex</code> compute them numerically. However,
+<code>geex</code>’s real utility comes when you have more complicated
+estimating equations. Also, the analyst has the ability to code faster
+<span class="math inline">\(\psi\)</span> functions by optimizing their
+code or using <code>Rccp</code>, for example.</p>
 
 
 

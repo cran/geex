@@ -8,21 +8,52 @@
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Bradley Saul" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2022-07-24" />
 
 <title>The design and structure of geex</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -108,6 +139,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+
 <style type="text/css">body {
 background-color: #fff;
 margin: 1em auto;
@@ -118,9 +150,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -289,7 +318,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -304,78 +334,106 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">The design and structure of geex</h1>
 <h4 class="author">Bradley Saul</h4>
-<h4 class="date">2020-02-17</h4>
+<h4 class="date">2022-07-24</h4>
 
 
 
 <blockquote>
-<p>The details below are for those interested in how geex is organized. It is not necessary for using geex.</p>
+<p>The details below are for those interested in how geex is organized.
+It is not necessary for using geex.</p>
 </blockquote>
 <div id="the-estimating-function" class="section level2">
 <h2>The Estimating Function</h2>
-<p>The design of <code>geex</code> starts with the key to M-estimation, the estimating function:</p>
+<p>The design of <code>geex</code> starts with the key to M-estimation,
+the estimating function:</p>
 <p><span class="math display">\[
 \psi(O_i, \theta) .
 \]</span></p>
-<p><code>geex</code> composes <span class="math inline">\(\psi\)</span> with two R functions: the “outer” <code>estFUN</code> and the “inner” <code>psiFUN</code>. In pseudocode, <span class="math inline">\(\psi(O_i, \theta) =\)</span>:</p>
+<p><code>geex</code> composes <span class="math inline">\(\psi\)</span>
+with two R functions: the “outer” <code>estFUN</code> and the “inner”
+<code>psiFUN</code>. In pseudocode, <span class="math inline">\(\psi(O_i, \theta) =\)</span>:</p>
 <pre><code>estFUN &lt;- function(O_i){
   psiFUN &lt;- function(theta){
      psi(O_i, theta)
   }
   return(psiFUN)
 }</code></pre>
-<p>The reason for composing the <span class="math inline">\(\psi\)</span> function in this way is that in order to do estimation (finding roots) and inference (computing the empirical sandwich variance estimator), <span class="math inline">\(\psi\)</span> needs to be function of <span class="math inline">\(\theta\)</span>. M-estimation theory gives the following instructions:</p>
+<p>The reason for composing the <span class="math inline">\(\psi\)</span> function in this way is that in
+order to do estimation (finding roots) and inference (computing the
+empirical sandwich variance estimator), <span class="math inline">\(\psi\)</span> needs to be function of <span class="math inline">\(\theta\)</span>. M-estimation theory gives the
+following instructions:</p>
 <ul>
-<li>To estimate <span class="math inline">\(\hat{\theta}\)</span>, we need to find roots of <span class="math inline">\(G_m = \sum_i \psi(O_i, \theta) = 0\)</span>.</li>
-<li>To estimate the empirical sandwich variance estimator, we need two quantities for each unit: <span class="math inline">\(A_i = - (\partial \psi(O_i, \theta)/\partial \theta)|_{\theta = \hat{\theta}}\)</span> and <span class="math inline">\(B_i = \psi(O_i, \hat{\theta})\psi(O_i, \theta)^{\intercal}\)</span>.</li>
+<li>To estimate <span class="math inline">\(\hat{\theta}\)</span>, we
+need to find roots of <span class="math inline">\(G_m = \sum_i \psi(O_i,
+\theta) = 0\)</span>.</li>
+<li>To estimate the empirical sandwich variance estimator, we need two
+quantities for each unit: <span class="math inline">\(A_i = - (\partial
+\psi(O_i, \theta)/\partial \theta)|_{\theta = \hat{\theta}}\)</span> and
+<span class="math inline">\(B_i = \psi(O_i, \hat{\theta})\psi(O_i,
+\theta)^{\intercal}\)</span>.</li>
 </ul>
-<p>With <span class="math inline">\(\hat{\theta}\)</span> in hand, the quantity <span class="math inline">\(B_i\)</span> is simple to compute. The computational challenges of M-estimation, then, are finding roots of <span class="math inline">\(G_m\)</span> and calculating the derivative <span class="math inline">\(A_i\)</span>. By composing <span class="math inline">\(\psi\)</span> of two functions in <code>geex</code>, one can first do all the manipulations of <span class="math inline">\(O_i\)</span> (data) that are independent of <span class="math inline">\(\theta\)</span>. In a sense, <code>estFUN</code> “fixes” the data so that numerical routines only need deal with <span class="math inline">\(\theta\)</span> in <code>psiFUN</code>.</p>
+<p>With <span class="math inline">\(\hat{\theta}\)</span> in hand, the
+quantity <span class="math inline">\(B_i\)</span> is simple to compute.
+The computational challenges of M-estimation, then, are finding roots of
+<span class="math inline">\(G_m\)</span> and calculating the derivative
+<span class="math inline">\(A_i\)</span>. By composing <span class="math inline">\(\psi\)</span> of two functions in
+<code>geex</code>, one can first do all the manipulations of <span class="math inline">\(O_i\)</span> (data) that are independent of <span class="math inline">\(\theta\)</span>. In a sense, <code>estFUN</code>
+“fixes” the data so that numerical routines only need deal with <span class="math inline">\(\theta\)</span> in <code>psiFUN</code>.</p>
 </div>
 <div id="m-estimation-basis" class="section level2">
 <h2>M-estimation basis</h2>
-<p>Before describing the mechanics of how <code>geex</code> finding roots of <span class="math inline">\(G_m\)</span> and computes derivatives of <span class="math inline">\(\psi\)</span>, let’s look at the <code>m_estimation_basis</code> <code>S4</code> object which forms the basis of all computations in <code>geex</code>.</p>
-<p>An <code>m_estimation_basis</code> object, at a minimum needs two objects: an <code>estFUN</code> and a <code>data.frame</code>. Let’s use a simple <code>estFUN</code> that estimates the mean and variance of <code>Y1</code> in the <code>geexex</code> dataset.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(geex)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(dplyr)</span>
-<span id="cb2-3"><a href="#cb2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4"></a>myee &lt;-<span class="st"> </span><span class="cf">function</span>(data){</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  Y1 &lt;-<span class="st"> </span>data<span class="op">$</span>Y1</span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="cf">function</span>(theta){</span>
-<span id="cb2-7"><a href="#cb2-7"></a>    <span class="kw">c</span>(Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>],</span>
-<span id="cb2-8"><a href="#cb2-8"></a>      (Y1 <span class="op">-</span><span class="st"> </span>theta[<span class="dv">1</span>])<span class="op">^</span><span class="dv">2</span> <span class="op">-</span><span class="st"> </span>theta[<span class="dv">2</span>])</span>
-<span id="cb2-9"><a href="#cb2-9"></a>  }</span>
-<span id="cb2-10"><a href="#cb2-10"></a>}</span></code></pre></div>
+<p>Before describing the mechanics of how <code>geex</code> finding
+roots of <span class="math inline">\(G_m\)</span> and computes
+derivatives of <span class="math inline">\(\psi\)</span>, let’s look at
+the <code>m_estimation_basis</code> <code>S4</code> object which forms
+the basis of all computations in <code>geex</code>.</p>
+<p>An <code>m_estimation_basis</code> object, at a minimum needs two
+objects: an <code>estFUN</code> and a <code>data.frame</code>. Let’s use
+a simple <code>estFUN</code> that estimates the mean and variance of
+<code>Y1</code> in the <code>geexex</code> dataset.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(geex)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>myee <span class="ot">&lt;-</span> <span class="cf">function</span>(data){</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  Y1 <span class="ot">&lt;-</span> data<span class="sc">$</span>Y1</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(theta){</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(Y1 <span class="sc">-</span> theta[<span class="dv">1</span>],</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      (Y1 <span class="sc">-</span> theta[<span class="dv">1</span>])<span class="sc">^</span><span class="dv">2</span> <span class="sc">-</span> theta[<span class="dv">2</span>])</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Now we can create a basis:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>mybasis &lt;-<span class="st"> </span><span class="kw">new</span>(<span class="st">&quot;m_estimation_basis&quot;</span>,</span>
-<span id="cb3-2"><a href="#cb3-2"></a>               <span class="dt">.estFUN =</span> myee,</span>
-<span id="cb3-3"><a href="#cb3-3"></a>               <span class="dt">.data   =</span> geexex)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mybasis <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&quot;m_estimation_basis&quot;</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">.estFUN =</span> myee,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">.data   =</span> geexex)</span></code></pre></div>
 <p>And look at what this object contains:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">slotNames</span>(mybasis)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slotNames</span>(mybasis)</span></code></pre></div>
 <pre><code>## [1] &quot;.data&quot;        &quot;.units&quot;       &quot;.weights&quot;     &quot;.psiFUN_list&quot; &quot;.GFUN&quot;       
 ## [6] &quot;.control&quot;     &quot;.estFUN&quot;      &quot;.outer_args&quot;  &quot;.inner_args&quot;</code></pre>
-<p>Two slots are worth examining. First, <code>.psiFUN_list</code> is a <code>list</code> of <code>function</code>s:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>mybasis<span class="op">@</span>.psiFUN_list[<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>]</span></code></pre></div>
+<p>Two slots are worth examining. First, <code>.psiFUN_list</code> is a
+<code>list</code> of <code>function</code>s:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mybasis<span class="sc">@</span>.psiFUN_list[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
 <pre><code>## $`1`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;environment: 0x7fd9e9d1df58&gt;
+## &lt;environment: 0x7f8b8adb47b8&gt;
 ## 
 ## $`2`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9e9cef2a8&gt;</code></pre>
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b8adb7350&gt;</code></pre>
 <p>This object is essentially equivalent to:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>m &lt;-<span class="st"> </span><span class="kw">nrow</span>(geexex)</span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">lapply</span>(<span class="kw">split</span>(geexex, <span class="dt">f =</span> <span class="dv">1</span><span class="op">:</span>m), <span class="cf">function</span>(O_i){</span>
-<span id="cb8-3"><a href="#cb8-3"></a>  <span class="kw">myee</span>(O_i)</span>
-<span id="cb8-4"><a href="#cb8-4"></a>})</span></code></pre></div>
-<p>From this list of functions, we can compute <span class="math inline">\(A_i\)</span>, and by summing across the list, form <span class="math inline">\(G_m\)</span>. The latter is found in:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>mybasis<span class="op">@</span>.GFUN</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">nrow</span>(geexex)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(<span class="fu">split</span>(geexex, <span class="at">f =</span> <span class="dv">1</span><span class="sc">:</span>m), <span class="cf">function</span>(O_i){</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">myee</span>(O_i)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
+<p>From this list of functions, we can compute <span class="math inline">\(A_i\)</span>, and by summing across the list, form
+<span class="math inline">\(G_m\)</span>. The latter is found in:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mybasis<span class="sc">@</span>.GFUN</span></code></pre></div>
 <pre><code>## function (theta) 
 ## {
 ##     psii &lt;- lapply(psi_list, function(psi) {
@@ -383,14 +441,16 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##     })
 ##     compute_sum_of_list(psii, object@.weights)
 ## }
-## &lt;environment: 0x7fd9e7de2f50&gt;</code></pre>
+## &lt;environment: 0x7f8b8a8c2588&gt;</code></pre>
 </div>
 <div id="finding-roots" class="section level2">
 <h2>Finding roots</h2>
-<p>Now that we have <span class="math inline">\(G_m\)</span> as a function of <code>theta</code>, we can found its roots using a root-finding algorithm such as <code>rootSolve::multiroot</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>rootSolve<span class="op">::</span><span class="kw">multiroot</span>(</span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="dt">f =</span> mybasis<span class="op">@</span>.GFUN, </span>
-<span id="cb11-3"><a href="#cb11-3"></a>  <span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>))</span></code></pre></div>
+<p>Now that we have <span class="math inline">\(G_m\)</span> as a
+function of <code>theta</code>, we can found its roots using a
+root-finding algorithm such as <code>rootSolve::multiroot</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>rootSolve<span class="sc">::</span><span class="fu">multiroot</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">f =</span> mybasis<span class="sc">@</span>.GFUN, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>))</span></code></pre></div>
 <pre><code>## $root
 ## [1]  5.044563 10.041239
 ## 
@@ -402,12 +462,15 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## 
 ## $estim.precis
 ## [1] 2.433609e-13</code></pre>
-<p>Within <code>geex</code> this is done with the <code>estimate_GFUN_roots</code> function. To illustrate, I first need to update the <code>.control</code> slot in <code>mybasis</code> with starting values for <code>multiroot</code>.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>mycontrol &lt;-<span class="st"> </span><span class="kw">new</span>(<span class="st">&#39;geex_control&#39;</span>, <span class="dt">.root =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>)))</span>
-<span id="cb13-2"><a href="#cb13-2"></a>mybasis<span class="op">@</span>.control &lt;-<span class="st"> </span>mycontrol</span>
-<span id="cb13-3"><a href="#cb13-3"></a>roots &lt;-<span class="st"> </span>mybasis <span class="op">%&gt;%</span></span>
-<span id="cb13-4"><a href="#cb13-4"></a><span class="st">  </span><span class="kw">estimate_GFUN_roots</span>()</span>
-<span id="cb13-5"><a href="#cb13-5"></a>roots</span></code></pre></div>
+<p>Within <code>geex</code> this is done with the
+<code>estimate_GFUN_roots</code> function. To illustrate, I first need
+to update the <code>.control</code> slot in <code>mybasis</code> with
+starting values for <code>multiroot</code>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mycontrol <span class="ot">&lt;-</span> <span class="fu">new</span>(<span class="st">&#39;geex_control&#39;</span>, <span class="at">.root =</span> <span class="fu">setup_root_control</span>(<span class="at">start =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>)))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>mybasis<span class="sc">@</span>.control <span class="ot">&lt;-</span> mycontrol</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>roots <span class="ot">&lt;-</span> mybasis <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">estimate_GFUN_roots</span>()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>roots</span></code></pre></div>
 <pre><code>## $root
 ## [1]  5.044563 10.041239
 ## 
@@ -419,40 +482,52 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## 
 ## $estim.precis
 ## [1] 1.225686e-13</code></pre>
-<p>Note that is bad form to assign <code>S4</code> slot with <code>someS4object@aslot &lt;- something</code>, but I do so here because I have not created a generic function for setting the <code>.control</code> slot.</p>
+<p>Note that is bad form to assign <code>S4</code> slot with
+<code>someS4object@aslot &lt;- something</code>, but I do so here
+because I have not created a generic function for setting the
+<code>.control</code> slot.</p>
 </div>
 <div id="computing-the-empirical-sandwich-variance-estimator" class="section level2">
 <h2>Computing the Empirical Sandwich Variance Estimator</h2>
-<p>In the last section, we found <span class="math inline">\(\hat{\theta}\)</span>, which we now use to compute the <span class="math inline">\(A_i\)</span> and <span class="math inline">\(B_i\)</span> matrices.</p>
-<p><code>geex</code> uses the <code>numDeriv::jacobian</code> function to numerically evaluate derivatives. For example, <span class="math inline">\(A_1 = - (\partial \psi(O_1, \theta)/\partial \theta)|_{\theta = \hat{\theta}}\)</span> for this example is:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="op">-</span>numDeriv<span class="op">::</span><span class="kw">jacobian</span>(<span class="dt">func =</span> mybasis<span class="op">@</span>.psiFUN_list[[<span class="dv">1</span>]], <span class="dt">x =</span> roots<span class="op">$</span>root)</span></code></pre></div>
+<p>In the last section, we found <span class="math inline">\(\hat{\theta}\)</span>, which we now use to compute
+the <span class="math inline">\(A_i\)</span> and <span class="math inline">\(B_i\)</span> matrices.</p>
+<p><code>geex</code> uses the <code>numDeriv::jacobian</code> function
+to numerically evaluate derivatives. For example, <span class="math inline">\(A_1 = - (\partial \psi(O_1, \theta)/\partial
+\theta)|_{\theta = \hat{\theta}}\)</span> for this example is:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span>numDeriv<span class="sc">::</span><span class="fu">jacobian</span>(<span class="at">func =</span> mybasis<span class="sc">@</span>.psiFUN_list[[<span class="dv">1</span>]], <span class="at">x =</span> roots<span class="sc">$</span>root)</span></code></pre></div>
 <pre><code>##           [,1] [,2]
 ## [1,]  1.000000    0
 ## [2,] -2.752514    1</code></pre>
-<p><code>geex</code> performs this operation for each <span class="math inline">\(i = 1, \dots, m\)</span> to yield a list of <span class="math inline">\(A_i\)</span> matrices. Then summing across this list yields <span class="math inline">\(A = \sum_i A_i\)</span>. The <code>estimate_sandwich_matrices</code> function computes the list of <span class="math inline">\(A_i\)</span>, <span class="math inline">\(B_i\)</span> and <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>mats &lt;-<span class="st"> </span>mybasis <span class="op">%&gt;%</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a><span class="st">  </span><span class="kw">estimate_sandwich_matrices</span>(<span class="dt">.theta =</span> roots<span class="op">$</span>root) </span>
-<span id="cb17-3"><a href="#cb17-3"></a></span>
-<span id="cb17-4"><a href="#cb17-4"></a><span class="co"># Compare to the numDeriv computation above</span></span>
-<span id="cb17-5"><a href="#cb17-5"></a><span class="kw">grab_bread_list</span>(mats)[[<span class="dv">1</span>]]</span></code></pre></div>
+<p><code>geex</code> performs this operation for each <span class="math inline">\(i = 1, \dots, m\)</span> to yield a list of <span class="math inline">\(A_i\)</span> matrices. Then summing across this
+list yields <span class="math inline">\(A = \sum_i A_i\)</span>. The
+<code>estimate_sandwich_matrices</code> function computes the list of
+<span class="math inline">\(A_i\)</span>, <span class="math inline">\(B_i\)</span> and <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>mats <span class="ot">&lt;-</span> mybasis <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">estimate_sandwich_matrices</span>(<span class="at">.theta =</span> roots<span class="sc">$</span>root) </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare to the numDeriv computation above</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grab_bread_list</span>(mats)[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>##           [,1] [,2]
 ## [1,]  1.000000    0
 ## [2,] -2.752514    1</code></pre>
-<p>Finally, computing <span class="math inline">\(\hat{\Sigma} = A^{-1} B (A^{-1})^{\intercal}\)</span> is accomplished with the <code>compute_sigma</code> function.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>mats <span class="op">%&gt;%</span></span>
-<span id="cb19-2"><a href="#cb19-2"></a><span class="st">  </span>{<span class="kw">compute_sigma</span>(<span class="dt">A =</span> <span class="kw">grab_bread</span>(.), <span class="dt">B =</span> <span class="kw">grab_meat</span>(.))}</span></code></pre></div>
+<p>Finally, computing <span class="math inline">\(\hat{\Sigma} = A^{-1}
+B (A^{-1})^{\intercal}\)</span> is accomplished with the
+<code>compute_sigma</code> function.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mats <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">compute_sigma</span>(<span class="at">A =</span> <span class="fu">grab_bread</span>(.), <span class="at">B =</span> <span class="fu">grab_meat</span>(.))}</span></code></pre></div>
 <pre><code>##            [,1]       [,2]
 ## [1,] 0.10041239 0.03667969
 ## [2,] 0.03667969 2.49219638</code></pre>
 </div>
 <div id="m-estimation-with-m_estimate" class="section level2">
 <h2>M-estimation with <code>m_estimate</code></h2>
-<p>All of the operations described above are wrapped and packaged in the <code>m_estimate</code> function:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="kw">m_estimate</span>(</span>
-<span id="cb21-2"><a href="#cb21-2"></a>  <span class="dt">estFUN =</span> myee,</span>
-<span id="cb21-3"><a href="#cb21-3"></a>  <span class="dt">data   =</span> geexex,</span>
-<span id="cb21-4"><a href="#cb21-4"></a>  <span class="dt">root_control =</span> <span class="kw">setup_root_control</span>(<span class="dt">start =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>))</span>
-<span id="cb21-5"><a href="#cb21-5"></a>)</span></code></pre></div>
+<p>All of the operations described above are wrapped and packaged in the
+<code>m_estimate</code> function:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">m_estimate</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">estFUN =</span> myee,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data   =</span> geexex,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">root_control =</span> <span class="fu">setup_root_control</span>(<span class="at">start =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>))</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>## An object of class &quot;geex&quot;
 ## Slot &quot;call&quot;:
 ## m_estimate(estFUN = myee, data = geexex, root_control = setup_root_control(start = c(0, 
@@ -676,800 +751,800 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee28c778&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a661350&gt;
 ## 
 ## $`2`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee28db98&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a65cd30&gt;
 ## 
 ## $`3`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee28b348&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a658438&gt;
 ## 
 ## $`4`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee2889a8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a659d98&gt;
 ## 
 ## $`5`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee289e00&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a657858&gt;
 ## 
 ## $`6`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee285460&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a653778&gt;
 ## 
 ## $`7`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee282900&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a64fa18&gt;
 ## 
 ## $`8`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee2806d0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a64d350&gt;
 ## 
 ## $`9`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee281a48&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a646be0&gt;
 ## 
 ## $`10`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee27cfc8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a6480e0&gt;
 ## 
 ## $`11`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee27a3f8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a6457b0&gt;
 ## 
 ## $`12`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee27bab8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a640ef0&gt;
 ## 
 ## $`13`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee279118&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a63cba8&gt;
 ## 
 ## $`14`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee2763f8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a63e038&gt;
 ## 
 ## $`15`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee2775e8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a63baf8&gt;
 ## 
 ## $`16`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee272858&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a639430&gt;
 ## 
 ## $`17`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee273c40&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a633008&gt;
 ## 
 ## $`18`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee26e040&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a630b38&gt;
 ## 
 ## $`19`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ff038&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a62c390&gt;
 ## 
 ## $`20`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1fd230&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a62d890&gt;
 ## 
 ## $`21`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1eeac0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a627238&gt;
 ## 
 ## $`22`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ec698&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a624860&gt;
 ## 
 ## $`23`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1edee0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a625dd0&gt;
 ## 
 ## $`24`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ebd20&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a623510&gt;
 ## 
 ## $`25`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1e9b28&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a620dd8&gt;
 ## 
 ## $`26`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1e4e40&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a61e4e0&gt;
 ## 
 ## $`27`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1e2858&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a620038&gt;
 ## 
 ## $`28`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1e3d90&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a61b900&gt;
 ## 
 ## $`29`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1e10e0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a618e10&gt;
 ## 
 ## $`30`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1de900&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a616c88&gt;
 ## 
 ## $`31`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1dc008&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a612668&gt;
 ## 
 ## $`32`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1dd658&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a613b68&gt;
 ## 
 ## $`33`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1da8c8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a611430&gt;
 ## 
 ## $`34`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1dbe00&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a60aef0&gt;
 ## 
 ## $`35`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1d9268&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a606940&gt;
 ## 
 ## $`36`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1d67e8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a607eb0&gt;
 ## 
 ## $`37`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1d7d20&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a605548&gt;
 ## 
 ## $`38`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1d0fc8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5fee10&gt;
 ## 
 ## $`39`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ce7b0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5fcb38&gt;
 ## 
 ## $`40`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1cc0e8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5fa6d8&gt;
 ## 
 ## $`41`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1cde00&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5fbd60&gt;
 ## 
 ## $`42`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c9770&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5f75b8&gt;
 ## 
 ## $`43`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c6f58&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5f37e8&gt;
 ## 
 ## $`44`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c42e0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5f0e48&gt;
 ## 
 ## $`45`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c5540&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5ee898&gt;
 ## 
 ## $`46`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c0890&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5efdd0&gt;
 ## 
 ## $`47`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1c1b28&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5ed708&gt;
 ## 
 ## $`48`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1bf0e0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5e6cc0&gt;
 ## 
 ## $`49`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1bc4a0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5e2898&gt;
 ## 
 ## $`50`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1bd8c0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5e0438&gt;
 ## 
 ## $`51`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1baee8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5e1c80&gt;
 ## 
 ## $`52`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1b8858&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5df190&gt;
 ## 
 ## $`53`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1b9e38&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5dc940&gt;
 ## 
 ## $`54`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1b78c0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5de000&gt;
 ## 
 ## $`55`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1b33f0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5dbd98&gt;
 ## 
 ## $`56`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ae7b0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5d73c0&gt;
 ## 
 ## $`57`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1afcb0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5d4dd8&gt;
 ## 
 ## $`58`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1ad2d8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5d3040&gt;
 ## 
 ## $`59`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1aacb8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5c24e0&gt;
 ## 
 ## $`60`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a6e78&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5c0668&gt;
 ## 
 ## $`61`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a4a50&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5c1fc8&gt;
 ## 
 ## $`62`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a5d90&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5bd938&gt;
 ## 
 ## $`63`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a3188&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5bb120&gt;
 ## 
 ## $`64`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a05f0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5b8898&gt;
 ## 
 ## $`65`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1a1a48&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5b9d98&gt;
 ## 
 ## $`66`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee19d230&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5b7388&gt;
 ## 
 ## $`67`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee19a548&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5b4c18&gt;
 ## 
 ## $`68`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee19b770&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5b5f58&gt;
 ## 
 ## $`69`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee198ac0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5af7b0&gt;
 ## 
 ## $`70`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee196190&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5ad1c8&gt;
 ## 
 ## $`71`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee197498&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5a8c50&gt;
 ## 
 ## $`72`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee194970&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5a64a8&gt;
 ## 
 ## $`73`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1921c8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5a7eb0&gt;
 ## 
 ## $`74`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee193700&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5a3cf0&gt;
 ## 
 ## $`75`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee190ac0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5a1580&gt;
 ## 
 ## $`76`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee18a238&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a59eac8&gt;
 ## 
 ## $`77`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee18b4d0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a59a240&gt;
 ## 
 ## $`78`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee188ac0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a59b708&gt;
 ## 
 ## $`79`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1865f0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a599548&gt;
 ## 
 ## $`80`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1877a8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a596b00&gt;
 ## 
 ## $`81`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee182cf0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a592240&gt;
 ## 
 ## $`82`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1808c8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a593858&gt;
 ## 
 ## $`83`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee181d58&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a588a58&gt;
 ## 
 ## $`84`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee17d188&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a586358&gt;
 ## 
 ## $`85`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee17a7b0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a587b30&gt;
 ## 
 ## $`86`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee178468&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a583e08&gt;
 ## 
 ## $`87`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee176388&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5814d8&gt;
 ## 
 ## $`88`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1777a8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a57f0b0&gt;
 ## 
 ## $`89`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee175118&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a57ac50&gt;
 ## 
 ## $`90`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee1725f0&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a574b38&gt;
 ## 
 ## $`91`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee173e70&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a575fc8&gt;
 ## 
 ## $`92`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee171380&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a571740&gt;
 ## 
 ## $`93`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee16c858&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a56d4d8&gt;
 ## 
 ## $`94`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee16a0e8&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a56aeb8&gt;
 ## 
 ## $`95`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee16b460&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a566d68&gt;
 ## 
 ## $`96`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee168858&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a564320&gt;
 ## 
 ## $`97`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee169c78&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a565dd0&gt;
 ## 
 ## $`98`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee166f90&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a5635b8&gt;
 ## 
 ## $`99`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee164468&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a561238&gt;
 ## 
 ## $`100`
 ## function(theta){
 ##     c(Y1 - theta[1],
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
-## &lt;bytecode: 0x7fd9e9a54348&gt;
-## &lt;environment: 0x7fd9ee165738&gt;
+## &lt;bytecode: 0x7f8b8a93d120&gt;
+## &lt;environment: 0x7f8b7a55eba8&gt;
 ## 
 ## 
 ## Slot &quot;.GFUN&quot;:
@@ -1480,7 +1555,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##     })
 ##     compute_sum_of_list(psii, object@.weights)
 ## }
-## &lt;environment: 0x7fd9ee12f7a8&gt;
+## &lt;environment: 0x7f8b7a511cb8&gt;
 ## 
 ## Slot &quot;.control&quot;:
 ## An object of class &quot;geex_control&quot;
@@ -1489,7 +1564,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## Slot &quot;.FUN&quot;:
 ## function () 
 ## NULL
-## &lt;bytecode: 0x7fd9e35a06a0&gt;
+## &lt;bytecode: 0x7f8b6da82970&gt;
 ## 
 ## Slot &quot;.options&quot;:
 ## list()
@@ -1620,7 +1695,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##     names(x) &lt;- names(start)
 ##     return(list(root = x, f.root = reffx, iter = i, estim.precis = precis[length(precis)]))
 ## }
-## &lt;bytecode: 0x7fd9e35d20d0&gt;
+## &lt;bytecode: 0x7f8b6dab4ec0&gt;
 ## &lt;environment: namespace:rootSolve&gt;
 ## 
 ## Slot &quot;.options&quot;:
@@ -1635,7 +1710,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## function (func, x, method = &quot;Richardson&quot;, side = NULL, method.args = list(), 
 ##     ...) 
 ## UseMethod(&quot;jacobian&quot;)
-## &lt;bytecode: 0x7fd9e35b3f30&gt;
+## &lt;bytecode: 0x7f8b6da97a20&gt;
 ## &lt;environment: namespace:numDeriv&gt;
 ## 
 ## Slot &quot;.options&quot;:
@@ -1653,7 +1728,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##       (Y1 - theta[1])^2 - theta[2])
 ##   }
 ## }
-## &lt;bytecode: 0x7fd9e9a4fa50&gt;
+## &lt;bytecode: 0x7f8b8a93e710&gt;
 ## 
 ## Slot &quot;.outer_args&quot;:
 ## list()
@@ -2998,7 +3073,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## Slot &quot;GFUN&quot;:
 ## function () 
 ## NULL
-## &lt;bytecode: 0x7fd9e355f6a8&gt;
+## &lt;bytecode: 0x7f8b6da0a2f8&gt;
 ## 
 ## Slot &quot;corrections&quot;:
 ## list()

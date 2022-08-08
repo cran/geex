@@ -19,15 +19,15 @@ estimates <- m_estimate(
   data  = geexex, 
   root_control = setup_root_control(start = c(1, 1, 1, 1)))
 
-## ----SB4_clsform, echo = TRUE, message = FALSE, results = 'hide'--------------
-ivfit <- AER::ivreg(Y3 ~ W1 | Z1, data = geexex)
-iv_se <- ivpack::cluster.robust.se(ivfit, clusterid = 1:nrow(geexex))
+## ----SB4_clsform, echo = TRUE, eval = FALSE, message = FALSE, results = 'hide'----
+#  ivfit <- AER::ivreg(Y3 ~ W1 | Z1, data = geexex)
+#  iv_se <- ivpack::cluster.robust.se(ivfit, clusterid = 1:nrow(geexex))
 
-## ----SB4_results, echo = TRUE-------------------------------------------------
-coef(ivfit)[2] 
-coef(estimates)[4]
-iv_se[2, 'Std. Error'] 
-sqrt(vcov(estimates)[4, 4])
+## ----SB4_results, eval = FALSE, echo = TRUE-----------------------------------
+#  coef(ivfit)[2]
+#  coef(estimates)[4]
+#  iv_se[2, 'Std. Error']
+#  sqrt(vcov(estimates)[4, 4])
 
 ## ----SB5_internals, echo = TRUE-----------------------------------------------
 F0 <- function(y, theta0, distrFUN = pnorm){
